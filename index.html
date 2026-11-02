@@ -187,7 +187,7 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 2: CREAR Y CALCULAR (VISTA PREVIA Y OPCIONES DE INICIO) -->
+    <!-- PESTAÑA 2: CREAR Y CALCULAR -->
     <div id="tab-crear" class="tab-content">
         <div class="card">
             <h2>🧮 Gestión y Creación de Ahorro</h2>
@@ -265,7 +265,7 @@
 
             <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Generar Vista Previa del Plan</button>
 
-            <!-- VISTA PREVIA Y OPCIONES DE INICIO (OCULTO HASTA CALCULAR) -->
+            <!-- VISTA PREVIA Y OPCIONES DE INICIO -->
             <div id="vistaPreviaContenedor" style="display:none; margin-top: 15px;">
                 <div id="resultadoCalculo" class="calc-box"></div>
                 
@@ -520,7 +520,7 @@
                 pausada: false,
                 diasPausadosTotales: 0,
                 ultimaPausa: null,
-                bloqueada: sellarBoveda // Se sella o no según el botón pulsado
+                bloqueada: sellarBoveda
             };
 
             metas.push(nuevaMeta);
