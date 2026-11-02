@@ -424,8 +424,14 @@
 
         function cambiarModoPlazo() {
             const modo = document.getElementById('modoCalculo').value;
-            document.getElementById('bloqueFechas').style.display = modo === 'fechas' ? 'block' : 'none';
-            document.getElementById('bloqueCuota').style.display = modo === 'cuota' ? 'block' : 'none';
+            if(modo === 'fechas') {
+                document.getElementById('bloqueFechas').style.display = 'block';
+                document.getElementById('bloqueCuota').style.display = 'none';
+            } else {
+                document.getElementById('bloqueFechas').style.display = 'none';
+                document.getElementById('bloqueCuota').style.display = 'block';
+            }
+            document.getElementById('vistaPreviaContenedor').style.display = 'none';
         }
 
         function limpiarFormulario() {
@@ -434,6 +440,9 @@
             document.getElementById('sueldoNeto').value = '';
             document.getElementById('variableName').value = '';
             document.getElementById('variableMontoInicial').value = '';
+            document.getElementById('aporteMensual').value = '';
+            document.getElementById('fechaInicio').value = '';
+            document.getElementById('fechaFin').value = '';
             document.getElementById('vistaPreviaContenedor').style.display = 'none';
             calculoTemporal = null;
             alert('Formulario limpiado.');
@@ -454,13 +463,13 @@
                 if(modo === 'fechas') {
                     inicio = document.getElementById('fechaInicio').value;
                     fin = document.getElementById('fechaFin').value;
-                    if(!inicio || !fin) { alert('Selecciona fechas.'); return; }
+                    if(!inicio || !fin) { alert('Selecciona fechas de inicio y fin.'); return; }
                     const d1 = new Date(inicio), d2 = new Date(fin);
                     daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
                     textoCalculo = `Meta (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
-                    if(isNaN(aporte) || aporte <= 0) { alert('Introduce aporte mensual.'); return; }
+                    if(isNaN(aporte) || aporte <= 0) { alert('Introduce una cuota mensual válida.'); return; }
                     inicio = new Date().toISOString().split('T')[0];
                     const meses = amount / aporte;
                     daysLeft = Math.ceil(meses * 30);
@@ -729,6 +738,7 @@
         }
 
         actualizarExplicacion();
+        cambiarModoPlazo();
         renderMetas();
         renderHistorial();
         renderDeseos();
