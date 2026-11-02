@@ -93,7 +93,6 @@
             border-left: 3px solid var(--accent);
             opacity: 0.9;
         }
-        /* Botón flotante de calculadora */
         .float-calc {
             position: fixed;
             bottom: 20px;
@@ -111,7 +110,6 @@
             cursor: pointer;
             z-index: 999;
         }
-        /* Modal calculadora flotante */
         #modalCalc {
             display: none;
             position: fixed;
@@ -167,6 +165,12 @@
             <label>Importe objetivo (€ / USDT)</label>
             <input type="number" id="metaAmount" placeholder="1200">
 
+            <label>Estrategia:</label>
+            <select id="metaTechniqueMeta">
+                <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto - Ideal para TV u Ordenador)</option>
+                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado - Ideal para Coche)</option>
+            </select>
+
             <label>Modo de Plazo:</label>
             <select id="modoCalculo" onchange="cambiarModoPlazo()">
                 <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
@@ -184,12 +188,6 @@
                 <label>¿Cuánto puedes aportar por mes (€)?</label>
                 <input type="number" id="aporteMensual" placeholder="Ej. 50">
             </div>
-
-            <label>Estrategia:</label>
-            <select id="metaTechniqueMeta">
-                <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
-                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado)</option>
-            </select>
         </div>
 
         <!-- BLOQUE 2: PORCENTAJE DE SUELDO -->
@@ -204,7 +202,7 @@
             </select>
         </div>
 
-        <!-- BLOQUE 3: AHORRO VARIABLE (REDONDEO / SOBRANTE / VUELTA) -->
+        <!-- BLOQUE 3: AHORRO VARIABLE -->
         <div id="seccionVariable" style="display:none;">
             <label>Nombre del fondo variable:</label>
             <input type="text" id="variableName" placeholder="Ej. Hucha de Redondeo / Sobrantes">
@@ -383,7 +381,7 @@
                     daysLeft = Math.ceil(meses * 30);
                     const f = new Date(); f.setDate(f.getDate() + daysLeft);
                     fin = f.toISOString().split('T')[0];
-                    textoCalculo = `Meta (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
+                    textoCalculo = `Meta (${name}): Pagando${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
@@ -417,41 +415,7 @@
 
             const box = document.getElementById('resultadoCalculo');
             box.style.display = 'block';
-            box.innerHTML = `📌 <b>Resultado:</b><br>${textoCalculo}`;
-        }
-
-        function comenzarMeta() {
-            if(!calculoTemporal) { alert('Calcula el plan primero.'); return; }
-
-            const nuevaMeta = {
-                id: Date.now(),
-                name: calculoTemporal.name,
-                amount: calculoTemporal.amount,
-                technique: calculoTemporal.technique,
-                inicio: calculoTemporal.inicio,
-                fin: calculoTemporal.fin,
-                textoCalculo: calculoTemporal.textoCalculo,
-                saved: calculoTemporal.montoInicial || 0,
-                daysLeft: calculoTemporal.daysLeft,
-                status: 'red',
-                esVariable: calculoTemporal.esVariable
-            };
-
-            metas.push(nuevaMeta);
-            guardarYRenderizarMetas();
-            limpiarFormulario();
-            alert('¡Meta creada con éxito!');
-        }
-
-        function sumarAporteLibre(id) {
-            const extra = prompt('¿Cuánto deseas sumar (Sobrante, Vuelta, Anti-capricho)? (€):');
-            const monto = parseFloat(extra);
-            if(!isNaN(monto) && monto > 0) {
-                const meta = metas.find(m => m.id === id);
-                if(meta) {
-                    meta.saved += monto;
-                    guardarYRenderizarMetas();
-                    alert(`¡Sumados ${monto}€ correctamente!`);
+            box.innerHTML = `📌 <b>Resultado:</b><br>${textoCalculo}`; }  function comenzarMeta() { if(!calculoTemporal) { alert('Calcula el plan primero.'); return; }  const nuevaMeta = { id: Date.now(), name: calculoTemporal.name, amount: calculoTemporal.amount, technique: calculoTemporal.technique, inicio: calculoTemporal.inicio, fin: calculoTemporal.fin, textoCalculo: calculoTemporal.textoCalculo, saved: calculoTemporal.montoInicial \vert{}\vert{} 0, daysLeft: calculoTemporal.daysLeft, status: 'red', esVariable: calculoTemporal.esVariable };  metas.push(nuevaMeta); guardarYRenderizarMetas(); limpiarFormulario(); alert('¡Meta creada con éxito!'); }  function sumarAporteLibre(id) { const extra = prompt('¿Cuánto deseas sumar (Sobrante, Vuelta, Anti-capricho)? (€):'); const monto = parseFloat(extra); if(!isNaN(monto) && monto > 0) { const meta = metas.find(m => m.id === id); if(meta) { meta.saved += monto; guardarYRenderizarMetas(); alert(`¡Sumados ${monto}€ correctamente!`);
                 }
             } else { alert('Importe no válido.'); }
         }
@@ -498,47 +462,4 @@
                 } else {
                     const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
                     infoProgreso = `Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)`;
-                    botonesExtra = `Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br><button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>`;
-                }
-
-                container.innerHTML += `
-                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
-                        <strong>🎯 ${meta.name}</strong><br>
-                        Estrategia: <i>${meta.technique}</i><br>
-                        🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
-                        ${infoProgreso}<br>
-                        <div class="calc-box">📊 <b>${meta.textoCalculo}</b></div>
-                        ${botonesExtra}
-                        <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">Eliminar Meta</button>
-                    </div>
-                `;
-            });
-        }
-
-        function eliminarMeta(id) {
-            if(confirm('¿Eliminar meta?')) {
-                metas = metas.filter(m => m.id !== id);
-                guardarYRenderizarMetas();
-            }
-        }
-
-        function renderDeseos() {
-            const container = document.getElementById('deseosList');
-            if(deseos.length === 0) { container.innerHTML = '<span style="font-size:13px; opacity:0.6;">No hay impulsos congelados.</span>'; return; }
-            container.innerHTML = '';
-            deseos.forEach(d => {
-                container.innerHTML += `<div style="font-size:13px; background:rgba(0,0,0,0.1); padding:6px; border-radius:6px; margin-top:4px;">⏳ <b>${d.nombre}</b> (${d.precio}€) - 48h</div>`;
-            });
-        }
-
-        function validarDia(id) {
-            const meta = metas.find(m => m.id === id);
-            if(meta) { meta.status = 'green'; guardarYRenderizarMetas(); alert('¡Día validado!'); }
-        }
-
-        actualizarExplicacion();
-        renderMetas();
-        renderDeseos();
-    </script>
-</body>
-</html>
+                    botonesExtra = `Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br><button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check
