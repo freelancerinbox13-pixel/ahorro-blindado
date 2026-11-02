@@ -464,8 +464,16 @@
                     inicio = document.getElementById('fechaInicio').value;
                     fin = document.getElementById('fechaFin').value;
                     if(!inicio || !fin) { alert('Selecciona fechas de inicio y fin.'); return; }
+                    
                     const d1 = new Date(inicio), d2 = new Date(fin);
-                    daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+                    const diffTime = d2 - d1;
+                    daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if(daysLeft <= 0) {
+                        alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio.');
+                        return;
+                    }
+
                     textoCalculo = `Meta (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
