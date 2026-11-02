@@ -54,7 +54,7 @@
         }
         .status-green { background-color: var(--green); }
         .status-red { background-color: var(--red); }
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px;
             margin-top: 6px;
@@ -74,6 +74,15 @@
             color: #38bdf8;
             border: 1px dashed var(--accent);
         }
+        .info-metodo {
+            font-size: 13px;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -92,13 +101,18 @@
 
     <!-- SECCIÓN: SELECCIÓN DE TIPO DE AHORRO -->
     <div class="card">
-        <h2>🧮 Calculadora de Ahorro</h2>
+        <h2>🧮 Gestión y Creación de Ahorro</h2>
         
-        <label>¿Qué tipo de cálculo deseas hacer?</label>
+        <label>¿Qué sistema de ahorro deseas usar?</label>
         <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
-            <option value="meta">Meta de Compra (Ordenador, Coche, TV...)</option>
-            <option value="sueldo">Ahorro por Porcentaje de Sueldo / Ingresos</option>
+            <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
+            <option value="sueldo">Ahorro por Porcentaje de Sueldo (50/30/20 o 70/20/10)</option>
+            <option value="variable">Ahorro Variable / Redondeo / Base Cero (Suma libre)</option>
         </select>
+
+        <div id="infoExplicacion" class="info-metodo">
+            <!-- Aquí cambia la explicación según el plan -->
+        </div>
 
         <!-- BLOQUE 1: METAS DE COMPRA -->
         <div id="seccionMeta">
@@ -132,12 +146,10 @@
                 <input type="number" id="aporteMensual" placeholder="Ej. 50">
             </div>
 
-            <label>Estrategia de Compra:</label>
+            <label>Estrategia:</label>
             <select id="metaTechniqueMeta">
-                <option value="Corto Plazo (Cuota fija / Reto)">Corto Plazo (Cuota fija / Reto - Ej. Ordenador / TV)</option>
-                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado - Ej. Coche)</option>
-                <option value="Presupuesto Base Cero">Presupuesto Base Cero</option>
-                <option value="Hucha de Redondeo">Hucha de Redondeo</option>
+                <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto - Ideal para TV u Ordenador)</option>
+                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado - Ideal para Coche)</option>
             </select>
         </div>
 
@@ -148,12 +160,24 @@
 
             <label>Regla de Porcentajes:</label>
             <select id="metaTechniqueSueldo">
-                <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
+                <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro neto)</option>
                 <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
             </select>
         </div>
 
-        <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular Plan</button>
+        <!-- BLOQUE 3: AHORRO VARIABLE (REDONDEO / BASE CERO) -->
+        <div id="seccionVariable" style="display:none;">
+            <label>Nombre del fondo variable:</label>
+            <input type="text" id="variableName" placeholder="Ej. Hucha Redondeo / Base Cero">
+
+            <label>Sistema Variable:</label>
+            <select id="metaTechniqueVariable">
+                <option value="Hucha de Redondeo">Hucha de Redondeo (Acumulas céntimos de tus compras de tarjeta)</option>
+                <option value="Presupuesto Base Cero">Presupuesto Base Cero (Asignación manual de sobrantes diarios)</option>
+            </select>
+        </div>
+
+        <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular / Preparar Plan</button>
 
         <div id="resultadoCalculo" class="calc-box" style="display:none;"></div>
 
@@ -196,6 +220,17 @@
         let wallet = localStorage.getItem('ahorro_wallet') || '';
         let calculoTemporal = null;
 
+        const explicaciones = {
+            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo (como un ordenador o un coche). La app calcula el ritmo diario o el tiempo necesario para alcanzarlo.",
+            sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto debes apartar de tus ingresos netos mensuales según reglas fijas de finanzas personales (como el 20% de ahorro en la regla 50/30/20).",
+            variable: "💡 <b>Ahorro Variable (Redondeo / Base Cero):</b> No tiene cuotas fijas ni plazos estrictos. Funciona sumando libremente los céntimos o sobrantes que tú decidas registrar manualmente cada vez que ahorres."
+        };
+
+        function actualizarExplicacion() {
+            const tipo = document.getElementById('tipoCalculadora').value;
+            document.getElementById('infoExplicacion').innerHTML = explicaciones[tipo];
+        }
+
         if(wallet) {
             document.getElementById('cryptoWallet').value = wallet;
             document.getElementById('walletStatus').innerText = 'Wallet vinculada: ' + wallet.substring(0, 15) + '...';
@@ -210,25 +245,17 @@
 
         function cambiarTipoCalculadora() {
             const tipo = document.getElementById('tipoCalculadora').value;
-            if(tipo === 'meta') {
-                document.getElementById('seccionMeta').style.display = 'block';
-                document.getElementById('seccionSueldo').style.display = 'none';
-            } else {
-                document.getElementById('seccionMeta').style.display = 'none';
-                document.getElementById('seccionSueldo').style.display = 'block';
-            }
+            document.getElementById('seccionMeta').style.display = tipo === 'meta' ? 'block' : 'none';
+            document.getElementById('seccionSueldo').style.display = tipo === 'sueldo' ? 'block' : 'none';
+            document.getElementById('seccionVariable').style.display = tipo === 'variable' ? 'block' : 'none';
             document.getElementById('resultadoCalculo').style.display = 'none';
+            actualizarExplicacion();
         }
 
         function cambiarModoPlazo() {
             const modo = document.getElementById('modoCalculo').value;
-            if(modo === 'fechas') {
-                document.getElementById('bloqueFechas').style.display = 'block';
-                document.getElementById('bloqueCuota').style.display = 'none';
-            } else {
-                document.getElementById('bloqueFechas').style.display = 'none';
-                document.getElementById('bloqueCuota').style.display = 'block';
-            }
+            document.getElementById('bloqueFechas').style.display = modo === 'fechas' ? 'block' : 'none';
+            document.getElementById('bloqueCuota').style.display = modo === 'cuota' ? 'block' : 'none';
             document.getElementById('resultadoCalculo').style.display = 'none';
         }
 
@@ -236,6 +263,7 @@
             document.getElementById('metaName').value = '';
             document.getElementById('metaAmount').value = '';
             document.getElementById('sueldoNeto').value = '';
+            document.getElementById('variableName').value = '';
             document.getElementById('fechaInicio').value = '';
             document.getElementById('fechaFin').value = '';
             document.getElementById('aporteMensual').value = '';
@@ -246,7 +274,7 @@
 
         function calcularPlan() {
             const tipo = document.getElementById('tipoCalculadora').value;
-            let name, amount, technique, inicio, fin, daysLeft, textoCalculo;
+            let name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable = false;
 
             if(tipo === 'meta') {
                 name = document.getElementById('metaName').value;
@@ -286,7 +314,7 @@
                     fin = fechaFinalObj.toISOString().split('T')[0];
                     textoCalculo = `Meta de compra (${name}): Pagando ${aporte}€/mes tardarás <b>${mesesNecesarios.toFixed(1)} meses</b>.`;
                 }
-            } else {
+            } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
                 technique = document.getElementById('metaTechniqueSueldo').value;
 
@@ -299,30 +327,45 @@
                 let ahorroMensual = 0;
                 if(technique === 'Regla 50/30/20') {
                     ahorroMensual = sueldo * 0.20;
-                    textoCalculo = `De tu sueldo de ${sueldo}€, tu <b>20% de ahorro mensual es de ${ahorroMensual.toFixed(2)}€</b> (50% gastos / 30% ocio).`;
+                    textoCalculo = `De tu sueldo de ${sueldo}€, tu <b>20% de ahorro mensual es de ${ahorroMensual.toFixed(2)}€</b>.`;
                 } else {
-                    ahorroMensual = sueldo * 0.20 + sueldo * 0.10; // 20% ahorro + 10% inversión
-                    textoCalculo = `De tu sueldo de ${sueldo}€, destinas un <b>30% total (${ahorroMensual.toFixed(2)}€/mes)</b> a ahorro e inversión (Regla 70/20/10).`;
+                    ahorroMensual = (sueldo * 0.20) + (sueldo * 0.10);
+                    textoCalculo = `De tu sueldo de ${sueldo}€, destinas un <b>30% total (${ahorroMensual.toFixed(2)}€/mes)</b> a ahorro e inversión.`;
                 }
 
-                amount = ahorroMensual * 12; // Anual de referencia
+                amount = ahorroMensual * 12;
                 inicio = new Date().toISOString().split('T')[0];
                 const fechaFinalObj = new Date();
                 fechaFinalObj.setFullYear(fechaFinalObj.getFullYear() + 1);
                 fin = fechaFinalObj.toISOString().split('T')[0];
                 daysLeft = 365;
+            } else {
+                name = document.getElementById('variableName').value;
+                technique = document.getElementById('metaTechniqueVariable').value;
+
+                if(!name) {
+                    alert('Introduce un nombre para este fondo variable.');
+                    return;
+                }
+
+                amount = 999999; // Sin límite fijo obligatorio
+                inicio = new Date().toISOString().split('T')[0];
+                fin = 'Indefinido';
+                daysLeft = 365;
+                esVariable = true;
+                textoCalculo = `Fondo variable (${technique}): Acumulación libre según tus aportes manuales o céntimos.`;
             }
 
-            calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo };
+            calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable };
 
             const box = document.getElementById('resultadoCalculo');
             box.style.display = 'block';
-            box.innerHTML = `📌 <b>Resultado del cálculo:</b><br>${textoCalculo}`;
+            box.innerHTML = `📌 <b>Resultado del cálculo / configuración:</b><br>${textoCalculo}`;
         }
 
         function comenzarMeta() {
             if(!calculoTemporal) {
-                alert('Por favor, pulsa primero el botón de "Calcular Plan".');
+                alert('Por favor, pulsa primero el botón de "Calcular / Preparar Plan".');
                 return;
             }
 
@@ -336,13 +379,30 @@
                 textoCalculo: calculoTemporal.textoCalculo,
                 saved: 0,
                 daysLeft: calculoTemporal.daysLeft,
-                status: 'red'
+                status: 'red',
+                esVariable: calculoTemporal.esVariable
             };
 
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
             limpiarFormulario();
             alert('¡Meta programada e iniciada con éxito!');
+        }
+
+        function sumarAporteLibre(id) {
+            const extra = prompt('¿Cuánto deseas sumar a este fondo variable? (€):');
+            const monto = parseFloat(extra);
+            if(!isNaN(monto) && monto > 0) {
+                const meta = metas.find(m => m.id === id);
+                if(meta) {
+                    meta.saved += monto;
+                    meta.status = 'green';
+                    guardarYRenderizarMetas();
+                    alert(`¡Sumados ${monto}€ correctamente!`);
+                }
+            } else {
+                alert('Importe no válido.');
+            }
         }
 
         function sumarAntiCapricho() {
@@ -390,21 +450,33 @@
             }
             container.innerHTML = '';
             metas.forEach(meta => {
-                const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
+                let infoProgreso = '';
+                let botonesExtra = '';
+
+                if(meta.esVariable) {
+                    infoProgreso = `Acumulado actual: <b>${meta.saved.toFixed(2)}€</b> (Sin límite fijo)`;
+                    botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green" style="margin-top:4px;">➕ Sumar Aporte Manual / Redondeo</button>`;
+                } else {
+                    const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
+                    infoProgreso = `Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)`;
+                    botonesExtra = `
+                        Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
+                        <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
+                    `;
+                }
 
                 container.innerHTML += `
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>🎯 ${meta.name}</strong><br>
                         Estrategia: <i>${meta.technique}</i><br>
                         🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
-                        Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)<br>
+                        ${infoProgreso}<br>
                         
                         <div class="calc-box">
                             📊 <b>${meta.textoCalculo}</b>
                         </div>
 
-                        Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
-                        <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
+                        ${botonesExtra}
                         <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">Eliminar / Cancelar Meta</button>
                     </div>
                 `;
@@ -439,6 +511,7 @@
             }
         }
 
+        actualizarExplicacion();
         renderMetas();
         renderDeseos();
     </script>
