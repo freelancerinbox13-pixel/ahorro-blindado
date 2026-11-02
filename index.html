@@ -125,7 +125,6 @@
             border-left: 3px solid var(--accent);
             opacity: 0.9;
         }
-        /* Botones Flotantes */
         .float-container {
             position: fixed;
             bottom: 20px;
@@ -225,7 +224,7 @@
                 <div id="bloqueFechas">
                     <div style="display: flex; gap: 10px;">
                         <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
-                        <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
+                        <div style="flex:1;"><label>Fecha Fin (Bloqueo Bóveda):</label><input type="date" id="fechaFin"></div>
                     </div>
                 </div>
 
@@ -269,7 +268,7 @@
             <div id="resultadoCalculo" class="calc-box" style="display:none;"></div>
 
             <div style="display: flex; gap: 10px; margin-top: 12px;">
-                <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
+                <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar y Sellar Bóveda</button>
                 <button class="btn-red" style="flex:1;" onclick="limpiarFormulario()">Cancelar</button>
             </div>
         </div>
@@ -353,7 +352,6 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             
-            // Buscar y activar el botón correspondiente
             const buttons = document.querySelectorAll('.tab-btn');
             if(tabId === 'metas') buttons[0].classList.add('active');
             if(tabId === 'crear') buttons[1].classList.add('active');
@@ -363,7 +361,6 @@
 
         function irAWallet() {
             switchTab('ajustes');
-            // Hacer scroll o destacar visualmente la tarjeta crypto
             const card = document.getElementById('cardCrypto');
             card.style.border = '2px solid var(--accent)';
             setTimeout(() => { card.style.border = '1px solid var(--border)'; }, 1500);
@@ -393,7 +390,7 @@
         }
 
         const explicaciones = {
-            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo. La app calcula el ritmo diario o el tiempo necesario.",
+            meta: "💡 <b>Meta de Compra:</b> Sella tu bóveda por el tiempo seleccionado. No se permite retirar fondos hasta que se cumpla el plazo.",
             sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto apartar de tus ingresos netos mensuales según reglas financieras.",
             variable: "💡 <b>Ahorro Variable:</b> Acumula la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible."
         };
@@ -459,7 +456,7 @@
                     if(!inicio || !fin) { alert('Selecciona fechas.'); return; }
                     const d1 = new Date(inicio), d2 = new Date(fin);
                     daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
-                    textoCalculo = `Meta (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
+                    textoCalculo = `Meta con Bóveda Sellada (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
                     if(isNaN(aporte) || aporte <= 0) { alert('Introduce aporte mensual.'); return; }
@@ -468,7 +465,7 @@
                     daysLeft = Math.ceil(meses * 30);
                     const f = new Date(); f.setDate(f.getDate() + daysLeft);
                     fin = f.toISOString().split('T')[0];
-                    textoCalculo = `Meta (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
+                    textoCalculo = `Meta con Bóveda Sellada (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
@@ -522,14 +519,22 @@
                 esVariable: calculoTemporal.esVariable,
                 pausada: false,
                 diasPausadosTotales: 0,
-                ultimaPausa: null
+                ultimaPausa: null,
+                bloqueada: true // Bóveda blindada por defecto
             };
 
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
             limpiarFormulario();
-            alert('¡Meta creada con éxito!');
+            alert('¡Meta creada y Bóveda Sellada con éxito!');
             switchTab('metas');
+        }
+
+        function intentarRetirada(id) {
+            const meta = metas.find(m => m.id === id);
+            if(meta && meta.bloqueada) {
+                alert('🔒 ¡BÓVEDA BLOQUEADA! Este ahorro está sellado por tiempo. No puedes retirar ni desbloquear los fondos hasta que se cumpla la fecha límite.');
+            }
         }
 
         function pausarMeta(id) {
@@ -635,13 +640,17 @@
                     const fechaFinObj = new Date(meta.fin);
                     const diffTime = fechaFinObj - hoy;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if(diffDays <= 0) {
+                        meta.bloqueada = false; // Se libera la bóveda al cumplirse el plazo
+                    }
+
                     if(meta.pausada) {
                         cuentaAtrasTexto = `⏸️ <b>Meta pausada</b>`;
                     } else if(diffDays > 0) {
                         const meses = (diffDays / 30).toFixed(1);
-                        cuentaAtrasTexto = `⏳ Quedan <b>${diffDays} días</b> (~${meses} meses)`;
+                        cuentaAtrasTexto = `🔒 <b>Bóveda Sellada</b> - Quedan <b>${diffDays} días</b> (~${meses} meses)`;
                     } else {
-                        cuentaAtrasTexto = `🔓 <b>¡Plazo cumplido!</b>`;
+                        cuentaAtrasTexto = `🔓 <b>¡Plazo cumplido! Bóveda abierta.</b>`;
                     }
                 }
 
@@ -654,10 +663,13 @@
                     let claseEstado = meta.pausada ? 'status-paused' : (meta.status === 'green' ? 'status-green' : 'status-red');
                     let botonRojo = (!meta.pausada && meta.status === 'red') ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar</button>` : '';
 
+                    let botonRetirada = meta.bloqueada ? `<button onclick="intentarRetirada(${meta.id})" class="btn-red" style="margin-top:4px; opacity:0.7;">🔒 Retirar Fondos (Bloqueado)</button>` : ``;
+
                     botonesExtra = `
                         Estado: <span class="status-box ${claseEstado}"></span> ${estadoHtml}<br>
                         <button onclick="validarDia(${meta.id})" class="btn-green" ${meta.pausada ? 'disabled style="opacity:0.5;"' : ''}>Validar Día</button>
                         ${botonRojo}
+                        ${botonRetirada}
                     `;
                 }
 
