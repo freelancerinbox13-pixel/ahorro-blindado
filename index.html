@@ -31,6 +31,37 @@
             transition: background 0.3s, color 0.3s;
         }
         h1, h2 { text-align: center; color: var(--accent); }
+        
+        /* Sistema de Pestañas */
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            width: auto;
+            margin-top: 0;
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            color: #0f172a;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
@@ -129,138 +160,154 @@
 <body>
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="font-size: 14px; font-weight: bold;">☀️ / 🌙 Modo Pantalla</span>
-        <button onclick="toggleTheme()" style="width: auto; padding: 6px 12px; font-size: 12px;">Cambiar Día / Noche</button>
+        <span style="font-size: 14px; font-weight: bold;">🛡️ Ahorro Blindado</span>
+        <button onclick="toggleTheme()" style="width: auto; padding: 6px 12px; font-size: 12px;">☀️ / 🌙 Tema</button>
     </div>
 
-    <h1>🛡️ Ahorro Blindado</h1>
-
-    <!-- CONFIGURACIÓN CRIPTO -->
-    <div class="card">
-        <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
-        <p style="font-size: 13px; opacity: 0.8;">Vincula una wallet (USDT/USDC) para tu ahorro serio:</p>
-        <label>Dirección o URL de la Wallet:</label>
-        <input type="text" id="cryptoWallet" placeholder="Ej. 0xYourWalletAddress...">
-        <button onclick="guardarWallet()" style="background:#6366f1; color:white;">Guardar Billetera</button>
-        <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
+    <!-- NAVEGACIÓN POR PESTAÑAS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('metas')">🎯 Mis Metas</button>
+        <button class="tab-btn" onclick="switchTab('crear')">➕ Crear</button>
+        <button class="tab-btn" onclick="switchTab('psico')">🧠 Psico & Huchas</button>
+        <button class="tab-btn" onclick="switchTab('ajustes')">⚙️ Ajustes</button>
     </div>
 
-    <!-- SELECCIÓN DE TIPO DE AHORRO -->
-    <div class="card">
-        <h2>🧮 Gestión y Creación de Ahorro</h2>
-        
-        <label>¿Qué sistema de ahorro deseas usar?</label>
-        <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
-            <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
-            <option value="sueldo">Ahorro por Porcentaje de Sueldo (50/30/20 o 70/20/10)</option>
-            <option value="variable">Ahorro Variable (Redondeo, Sobrante, Vuelta, Anti-Capricho)</option>
-        </select>
+    <!-- PESTAÑA 1: MIS METAS ACTIVAS -->
+    <div id="tab-metas" class="tab-content active">
+        <div class="card">
+            <h2>Mis Metas Activas Programadas</h2>
+            <div id="metasList">Cargando metas...</div>
+        </div>
+    </div>
 
-        <div id="infoExplicacion" class="info-metodo"></div>
-
-        <!-- BLOQUE 1: METAS DE COMPRA -->
-        <div id="seccionMeta">
-            <label>¿Qué quieres comprar?</label>
-            <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche...">
+    <!-- PESTAÑA 2: CREAR Y CALCULAR -->
+    <div id="tab-crear" class="tab-content">
+        <div class="card">
+            <h2>🧮 Gestión y Creación de Ahorro</h2>
             
-            <label>Importe objetivo (€ / USDT)</label>
-            <input type="number" id="metaAmount" placeholder="1200">
-
-            <label>Estrategia:</label>
-            <select id="metaTechniqueMeta">
-                <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto - Ideal para TV u Ordenador)</option>
-                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado - Ideal para Coche)</option>
+            <label>¿Qué sistema de ahorro deseas usar?</label>
+            <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
+                <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
+                <option value="sueldo">Ahorro por Porcentaje de Sueldo (50/30/20 o 70/20/10)</option>
+                <option value="variable">Ahorro Variable (Redondeo, Sobrante, Vuelta, Anti-Capricho)</option>
             </select>
 
-            <label>Modo de Plazo:</label>
-            <select id="modoCalculo" onchange="cambiarModoPlazo()">
-                <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
-                <option value="cuota">Sé cuánto puedo pagar al mes (Calcular tiempo)</option>
-            </select>
+            <div id="infoExplicacion" class="info-metodo"></div>
 
-            <div id="bloqueFechas">
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
-                    <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
+            <!-- BLOQUE 1: METAS DE COMPRA -->
+            <div id="seccionMeta">
+                <label>¿Qué quieres comprar?</label>
+                <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche...">
+                
+                <label>Importe objetivo (€ / USDT)</label>
+                <input type="number" id="metaAmount" placeholder="1200">
+
+                <label>Estrategia:</label>
+                <select id="metaTechniqueMeta">
+                    <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
+                    <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado)</option>
+                </select>
+
+                <label>Modo de Plazo:</label>
+                <select id="modoCalculo" onchange="cambiarModoPlazo()">
+                    <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
+                    <option value="cuota">Sé cuánto puedo pagar al mes (Calcular tiempo)</option>
+                </select>
+
+                <div id="bloqueFechas">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
+                        <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
+                    </div>
+                </div>
+
+                <div id="bloqueCuota" style="display:none;">
+                    <label>¿Cuánto puedes aportar por mes (€)?</label>
+                    <input type="number" id="aporteMensual" placeholder="Ej. 50">
                 </div>
             </div>
 
-            <div id="bloqueCuota" style="display:none;">
-                <label>¿Cuánto puedes aportar por mes (€)?</label>
-                <input type="number" id="aporteMensual" placeholder="Ej. 50">
+            <!-- BLOQUE 2: PORCENTAJE DE SUELDO -->
+            <div id="seccionSueldo" style="display:none;">
+                <label>Tus ingresos netos mensuales (€):</label>
+                <input type="number" id="sueldoNeto" placeholder="Ej. 2000">
+
+                <label>Regla de Porcentajes:</label>
+                <select id="metaTechniqueSueldo">
+                    <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
+                    <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
+                </select>
+            </div>
+
+            <!-- BLOQUE 3: AHORRO VARIABLE -->
+            <div id="seccionVariable" style="display:none;">
+                <label>Nombre del fondo variable:</label>
+                <input type="text" id="variableName" placeholder="Ej. Hucha de Redondeo / Sobrantes">
+
+                <label>Especificación del Ahorro:</label>
+                <select id="metaTechniqueVariable">
+                    <option value="Hucha de Redondeo">Hucha de Redondeo (Céntimos de tarjeta)</option>
+                    <option value="Vuelta de la Compra">Vuelta de la Compra (Efectivo sobrante)</option>
+                    <option value="Sobrante Diario">Sobrante Diario (Presupuesto Base Cero)</option>
+                    <option value="Anti-Capricho">Anti-Capricho (Gasto cotidiano evitado)</option>
+                </select>
+
+                <label>Monto inicial o aporte a registrar (€):</label>
+                <input type="number" step="0.01" id="variableMontoInicial" placeholder="Ej. 2.50">
+            </div>
+
+            <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular / Preparar Plan</button>
+
+            <div id="resultadoCalculo" class="calc-box" style="display:none;"></div>
+
+            <div style="display: flex; gap: 10px; margin-top: 12px;">
+                <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
+                <button class="btn-red" style="flex:1;" onclick="limpiarFormulario()">Cancelar</button>
             </div>
         </div>
+    </div>
 
-        <!-- BLOQUE 2: PORCENTAJE DE SUELDO -->
-        <div id="seccionSueldo" style="display:none;">
-            <label>Tus ingresos netos mensuales (€):</label>
-            <input type="number" id="sueldoNeto" placeholder="Ej. 2000">
-
-            <label>Regla de Porcentajes:</label>
-            <select id="metaTechniqueSueldo">
-                <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
-                <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
-            </select>
+    <!-- PESTAÑA 3: PSICOLOGÍA Y HUCHAS -->
+    <div id="tab-psico" class="tab-content">
+        <!-- HUCHA ANTI-CAPRICHOS -->
+        <div class="card">
+            <h2>☕ Hucha Anti-Caprichos</h2>
+            <label>Concepto (Café, Caña...):</label>
+            <input type="text" id="caprichoConcepto" placeholder="Ej. Café evitado">
+            <label>Importe ahorrado (€):</label>
+            <input type="number" step="0.01" id="caprichoMonto" placeholder="1.50">
+            <button class="btn-green" onclick="sumarAntiCapricho()">A sumar a la Meta Activa</button>
         </div>
 
-        <!-- BLOQUE 3: AHORRO VARIABLE -->
-        <div id="seccionVariable" style="display:none;">
-            <label>Nombre del fondo variable:</label>
-            <input type="text" id="variableName" placeholder="Ej. Hucha de Redondeo / Sobrantes">
-
-            <label>Especificación del Ahorro:</label>
-            <select id="metaTechniqueVariable">
-                <option value="Hucha de Redondeo">Hucha de Redondeo (Céntimos de tarjeta)</option>
-                <option value="Vuelta de la Compra">Vuelta de la Compra (Efectivo sobrante)</option>
-                <option value="Sobrante Diario">Sobrante Diario (Presupuesto Base Cero)</option>
-                <option value="Anti-Capricho">Anti-Capricho (Gasto cotidiano evitado)</option>
-            </select>
-
-            <label>Monto inicial o aporte a registrar (€):</label>
-            <input type="number" step="0.01" id="variableMontoInicial" placeholder="Ej. 2.50">
-        </div>
-
-        <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular / Preparar Plan</button>
-
-        <div id="resultadoCalculo" class="calc-box" style="display:none;"></div>
-
-        <div style="display: flex; gap: 10px; margin-top: 12px;">
-            <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
-            <button class="btn-red" style="flex:1;" onclick="limpiarFormulario()">Cancelar</button>
+        <!-- REGLA DE LAS 48 HORAS -->
+        <div class="card">
+            <h2>⏳ Filtro Anti-Impulsos (Regla 48h)</h2>
+            <label>Producto deseado:</label>
+            <input type="text" id="deseoNombre" placeholder="Ej. Zapatillas">
+            <label>Precio (€):</label>
+            <input type="number" id="deseoPrecio" placeholder="80">
+            <button class="btn-warning" onclick="agregarDeseo()">Congelar Capricho (48h)</button>
+            <div id="deseosList" style="margin-top: 12px;"></div>
         </div>
     </div>
 
-    <!-- MIS METAS ACTIVAS -->
-    <div class="card">
-        <h2>Mis Metas Activas Programadas</h2>
-        <div id="metasList">Cargando metas...</div>
-    </div>
+    <!-- PESTAÑA 4: AJUSTES E HISTORIAL -->
+    <div id="tab-ajustes" class="tab-content">
+        <!-- CONFIGURACIÓN CRIPTO -->
+        <div class="card">
+            <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
+            <p style="font-size: 13px; opacity: 0.8;">Vincula una wallet (USDT/USDC) para tu ahorro serio:</p>
+            <label>Dirección o URL de la Wallet:</label>
+            <input type="text" id="cryptoWallet" placeholder="Ej. 0xYourWalletAddress...">
+            <button onclick="guardarWallet()" style="background:#6366f1; color:white;">Guardar Billetera</button>
+            <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
+        </div>
 
-    <!-- HISTORIAL DE METAS FINALIZADAS / CANCELADAS -->
-    <div class="card">
-        <h2>📜 Historial de Metas (Finalizadas / Canceladas)</h2>
-        <div id="historialList">No hay metas en el historial.</div>
-    </div>
-
-    <!-- HUCHA ANTI-CAPRICHOS -->
-    <div class="card">
-        <h2>☕ Hucha Anti-Caprichos</h2>
-        <label>Concepto (Café, Caña...):</label>
-        <input type="text" id="caprichoConcepto" placeholder="Ej. Café evitado">
-        <label>Importe ahorrado (€):</label>
-        <input type="number" step="0.01" id="caprichoMonto" placeholder="1.50">
-        <button class="btn-green" onclick="sumarAntiCapricho()">A sumar a la Meta Activa</button>
-    </div>
-
-    <!-- REGLA DE LAS 48 HORAS -->
-    <div class="card">
-        <h2>⏳ Filtro Anti-Impulsos (Regla 48h)</h2>
-        <label>Producto deseado:</label>
-        <input type="text" id="deseoNombre" placeholder="Ej. Zapatillas">
-        <label>Precio (€):</label>
-        <input type="number" id="deseoPrecio" placeholder="80">
-        <button class="btn-warning" onclick="agregarDeseo()">Congelar Capricho (48h)</button>
-        <div id="deseosList" style="margin-top: 12px;"></div>
+        <!-- HISTORIAL -->
+        <div class="card">
+            <h2>📜 Historial de Metas (Finalizadas / Canceladas)</h2>
+            <div id="historialList">No hay metas en el historial.</div>
+        </div>
     </div>
 
     <!-- BOTÓN Y VENTANA FLOTANTE DE CALCULADORA -->
@@ -288,6 +335,13 @@
 
         if(isLight) document.body.classList.add('light-mode');
 
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
         function toggleTheme() {
             isLight = !isLight;
             localStorage.setItem('ahorro_light', isLight);
@@ -311,7 +365,7 @@
         }
 
         const explicaciones = {
-            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo. La app calcula el ritmo diario o el tiempo necesario para alcanzarlo.",
+            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo. La app calcula el ritmo diario o el tiempo necesario.",
             sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto apartar de tus ingresos netos mensuales según reglas financieras.",
             variable: "💡 <b>Ahorro Variable:</b> Acumula la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible."
         };
@@ -369,10 +423,7 @@
                 technique = document.getElementById('metaTechniqueMeta').value;
                 const modo = document.getElementById('modoCalculo').value;
 
-                if(!name || isNaN(amount) || amount <= 0) {
-                    alert('Introduce el nombre de la meta y un importe válido.');
-                    return;
-                }
+                if(!name || isNaN(amount) || amount <= 0) { alert('Introduce nombre e importe.'); return; }
 
                 if(modo === 'fechas') {
                     inicio = document.getElementById('fechaInicio').value;
@@ -450,6 +501,7 @@
             guardarYRenderizarMetas();
             limpiarFormulario();
             alert('¡Meta creada con éxito!');
+            switchTab('metas'); // Te lleva directo a ver tus metas
         }
 
         function pausarMeta(id) {
@@ -457,12 +509,10 @@
             if(meta && meta.fin !== 'Indefinido') {
                 const hoy = new Date();
                 if(!meta.pausada) {
-                    // Al pausar, guardamos la fecha de inicio de pausa
                     meta.pausada = true;
                     meta.ultimaPausa = hoy.toISOString();
-                    alert('⏸️ Meta congelada. La fecha de finalización se detiene.');
+                    alert('⏸️ Meta congelada.');
                 } else {
-                    // Al reanudar, calculamos cuántos días estuvo pausada y desplazamos la fecha fin
                     meta.pausada = false;
                     if(meta.ultimaPausa) {
                         const inicioPausa = new Date(meta.ultimaPausa);
@@ -474,11 +524,10 @@
                         }
                     }
                     meta.ultimaPausa = null;
-                    alert('▶️ Meta reactivada. El calendario de finalización se ha desplazado.');
+                    alert('▶️ Meta reactivada y calendario desplazado.');
                 }
                 guardarYRenderizarMetas();
             } else if(meta) {
-                // Si es indefinida o variable solo cambia el estado
                 meta.pausada = !meta.pausada;
                 guardarYRenderizarMetas();
                 alert(meta.pausada ? '⏸️ Meta pausada.' : '▶️ Meta reactivada.');
@@ -486,7 +535,7 @@
         }
 
         function repararRojo(id) {
-            const extra = prompt('Para limpiar el rojo y volver al verde, introduce un aporte de compensación (€):');
+            const extra = prompt('Introduce aporte de compensación (€):');
             const monto = parseFloat(extra);
             if(!isNaN(monto) && monto > 0) {
                 const meta = metas.find(m => m.id === id);
@@ -494,20 +543,20 @@
                     meta.saved += monto;
                     meta.status = 'green';
                     guardarYRenderizarMetas();
-                    alert(`¡Rojo reparado! Se han sumado ${monto}€ y la racha vuelve a estar en verde 🟢.`);
+                    alert(`¡Rojo reparado! Racha en verde 🟢.`);
                 }
             } else { alert('Importe no válido.'); }
         }
 
         function sumarAporteLibre(id) {
-            const extra = prompt('¿Cuánto deseas sumar (Sobrante, Vuelta, Anti-capricho)? (€):');
+            const extra = prompt('¿Cuánto deseas sumar (€):');
             const monto = parseFloat(extra);
             if(!isNaN(monto) && monto > 0) {
                 const meta = metas.find(m => m.id === id);
                 if(meta) {
                     meta.saved += monto;
                     guardarYRenderizarMetas();
-                    alert(`¡Sumados ${monto}€ correctamente!`);
+                    alert(`¡Sumados ${monto}€!`);
                 }
             } else { alert('Importe no válido.'); }
         }
@@ -553,34 +602,33 @@
 
             metas.forEach(meta => {
                 let infoProgreso = '', botonesExtra = '';
-                
                 let cuentaAtrasTexto = 'Plazo indefinido';
                 if(meta.fin !== 'Indefinido') {
                     const fechaFinObj = new Date(meta.fin);
                     const diffTime = fechaFinObj - hoy;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     if(meta.pausada) {
-                        cuentaAtrasTexto = `⏸️ <b>Meta pausada (Calendario congelado)</b>`;
+                        cuentaAtrasTexto = `⏸️ <b>Meta pausada</b>`;
                     } else if(diffDays > 0) {
                         const meses = (diffDays / 30).toFixed(1);
-                        cuentaAtrasTexto = `⏳ Quedan <b>${diffDays} días</b> (~${meses} meses) para el desbloqueo`;
+                        cuentaAtrasTexto = `⏳ Quedan <b>${diffDays} días</b> (~${meses} meses)`;
                     } else {
-                        cuentaAtrasTexto = `🔓 <b>¡Plazo de bloqueo cumplido! Bóveda liberada.</b>`;
+                        cuentaAtrasTexto = `🔓 <b>¡Plazo cumplido!</b>`;
                     }
                 }
 
                 if(meta.esVariable) {
                     infoProgreso = `Acumulado actual: <b>${meta.saved.toFixed(2)}€</b>`;
-                    botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green">➕ Registrar Sobrante / Vuelta / Anti-Capricho</button>`;
+                    botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green">➕ Registrar Aporte</button>`;
                 } else {
                     const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
                     let estadoHtml = meta.pausada ? 'Pausada ⏸️' : (meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴');
                     let claseEstado = meta.pausada ? 'status-paused' : (meta.status === 'green' ? 'status-green' : 'status-red');
-                    let botonRojo = (!meta.pausada && meta.status === 'red') ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar Día</button>` : '';
+                    let botonRojo = (!meta.pausada && meta.status === 'red') ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar</button>` : '';
 
                     botonesExtra = `
-                        Estado hoy: <span class="status-box ${claseEstado}"></span> ${estadoHtml}<br>
-                        <button onclick="validarDia(${meta.id})" class="btn-green" ${meta.pausada ? 'disabled style="opacity:0.5;"' : ''}>Validar Día (Check-in)</button>
+                        Estado: <span class="status-box ${claseEstado}"></span> ${estadoHtml}<br>
+                        <button onclick="validarDia(${meta.id})" class="btn-green" ${meta.pausada ? 'disabled style="opacity:0.5;"' : ''}>Validar Día</button>
                         ${botonRojo}
                     `;
                 }
@@ -589,20 +637,20 @@
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>🎯 ${meta.name}</strong><br>
                         Estrategia: <i>${meta.technique}</i><br>
-                        🗓️ Plazo actualizado: ${meta.inicio} al ${meta.fin}<br>
+                        🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
                         <span style="font-size:13px; color:var(--accent);">${cuentaAtrasTexto}</span><br>
                         ${meta.esVariable ? infoProgreso : ('Progreso: ' + meta.saved.toFixed(2) + '€ / ' + meta.amount + '€ (' + Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1) + '%)')}<br>
                         <div class="calc-box">📊 <b>${meta.textoCalculo}</b></div>
                         ${botonesExtra}
-                        <button onclick="pausarMeta(${meta.id})" class="btn-warning" style="margin-top:4px;">${meta.pausada ? '▶️ Reactivar Meta' : '⏸️ Pausar / Congelar Meta'}</button>
-                        <button onclick="cancelarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">❌ Cancelar / Enviar a Historial</button>
+                        <button onclick="pausarMeta(${meta.id})" class="btn-warning" style="margin-top:4px;">${meta.pausada ? '▶️ Reactivar' : '⏸️ Pausar Meta'}</button>
+                        <button onclick="cancelarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">❌ Cancelar / Historial</button>
                     </div>
                 `;
             });
         }
 
         function cancelarMeta(id) {
-            if(confirm('¿Deseas cancelar esta meta y enviarla al historial?')) {
+            if(confirm('¿Enviar esta meta al historial?')) {
                 const meta = metas.find(m => m.id === id);
                 if(meta) {
                     meta.estadoHistorial = 'Cancelada';
