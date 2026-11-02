@@ -63,6 +63,7 @@
         }
         .status-green { background-color: var(--green); }
         .status-red { background-color: var(--red); }
+        .status-paused { background-color: var(--warning); }
         input, select {
             width: 100%;
             padding: 10px;
@@ -235,6 +236,12 @@
         <div id="metasList">Cargando metas...</div>
     </div>
 
+    <!-- HISTORIAL DE METAS FINALIZADAS / CANCELADAS -->
+    <div class="card">
+        <h2>📜 Historial de Metas (Finalizadas / Canceladas)</h2>
+        <div id="historialList">No hay metas en el historial.</div>
+    </div>
+
     <!-- HUCHA ANTI-CAPRICHOS -->
     <div class="card">
         <h2>☕ Hucha Anti-Caprichos</h2>
@@ -273,6 +280,7 @@
 
     <script>
         let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
+        let historial = JSON.parse(localStorage.getItem('ahorro_historial')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
         let wallet = localStorage.getItem('ahorro_wallet') || '';
         let isLight = localStorage.getItem('ahorro_light') === 'true';
@@ -432,13 +440,49 @@
                 saved: calculoTemporal.montoInicial || 0,
                 daysLeft: calculoTemporal.daysLeft,
                 status: 'red',
-                esVariable: calculoTemporal.esVariable
+                esVariable: calculoTemporal.esVariable,
+                pausada: false,
+                diasPausadosTotales: 0,
+                ultimaPausa: null
             };
 
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
             limpiarFormulario();
             alert('¡Meta creada con éxito!');
+        }
+
+        function pausarMeta(id) {
+            const meta = metas.find(m => m.id === id);
+            if(meta && meta.fin !== 'Indefinido') {
+                const hoy = new Date();
+                if(!meta.pausada) {
+                    // Al pausar, guardamos la fecha de inicio de pausa
+                    meta.pausada = true;
+                    meta.ultimaPausa = hoy.toISOString();
+                    alert('⏸️ Meta congelada. La fecha de finalización se detiene.');
+                } else {
+                    // Al reanudar, calculamos cuántos días estuvo pausada y desplazamos la fecha fin
+                    meta.pausada = false;
+                    if(meta.ultimaPausa) {
+                        const inicioPausa = new Date(meta.ultimaPausa);
+                        const diasInactivos = Math.ceil((hoy - inicioPausa) / (1000 * 60 * 60 * 24));
+                        if(diasInactivos > 0) {
+                            const fechaFinActual = new Date(meta.fin);
+                            fechaFinActual.setDate(fechaFinActual.getDate() + diasInactivos);
+                            meta.fin = fechaFinActual.toISOString().split('T')[0];
+                        }
+                    }
+                    meta.ultimaPausa = null;
+                    alert('▶️ Meta reactivada. El calendario de finalización se ha desplazado.');
+                }
+                guardarYRenderizarMetas();
+            } else if(meta) {
+                // Si es indefinida o variable solo cambia el estado
+                meta.pausada = !meta.pausada;
+                guardarYRenderizarMetas();
+                alert(meta.pausada ? '⏸️ Meta pausada.' : '▶️ Meta reactivada.');
+            }
         }
 
         function repararRojo(id) {
@@ -448,13 +492,11 @@
                 const meta = metas.find(m => m.id === id);
                 if(meta) {
                     meta.saved += monto;
-                    meta.status = 'green'; // Se limpia el rojo y pasa a verde
+                    meta.status = 'green';
                     guardarYRenderizarMetas();
                     alert(`¡Rojo reparado! Se han sumado ${monto}€ y la racha vuelve a estar en verde 🟢.`);
                 }
-            } else {
-                alert('Importe no válido.');
-            }
+            } else { alert('Importe no válido.'); }
         }
 
         function sumarAporteLibre(id) {
@@ -497,7 +539,9 @@
 
         function guardarYRenderizarMetas() {
             localStorage.setItem('ahorro_metas', JSON.stringify(metas));
+            localStorage.setItem('ahorro_historial', JSON.stringify(historial));
             renderMetas();
+            renderHistorial();
         }
 
         function renderMetas() {
@@ -510,13 +554,14 @@
             metas.forEach(meta => {
                 let infoProgreso = '', botonesExtra = '';
                 
-                // Cálculo de cuenta atrás en tiempo real
                 let cuentaAtrasTexto = 'Plazo indefinido';
                 if(meta.fin !== 'Indefinido') {
                     const fechaFinObj = new Date(meta.fin);
                     const diffTime = fechaFinObj - hoy;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if(diffDays > 0) {
+                    if(meta.pausada) {
+                        cuentaAtrasTexto = `⏸️ <b>Meta pausada (Calendario congelado)</b>`;
+                    } else if(diffDays > 0) {
                         const meses = (diffDays / 30).toFixed(1);
                         cuentaAtrasTexto = `⏳ Quedan <b>${diffDays} días</b> (~${meses} meses) para el desbloqueo`;
                     } else {
@@ -529,14 +574,13 @@
                     botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green">➕ Registrar Sobrante / Vuelta / Anti-Capricho</button>`;
                 } else {
                     const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
-                    progresoTexto = `Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)`;
-                    
-                    let estadoHtml = meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴 (Falta ahorro)';
-                    let botonRojo = meta.status === 'red' ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar Día (Quitar Rojo)</button>` : '';
+                    let estadoHtml = meta.pausada ? 'Pausada ⏸️' : (meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴');
+                    let claseEstado = meta.pausada ? 'status-paused' : (meta.status === 'green' ? 'status-green' : 'status-red');
+                    let botonRojo = (!meta.pausada && meta.status === 'red') ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar Día</button>` : '';
 
                     botonesExtra = `
-                        Estado hoy: <span class="status-box status-${meta.status}"></span> ${estadoHtml}<br>
-                        <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
+                        Estado hoy: <span class="status-box ${claseEstado}"></span> ${estadoHtml}<br>
+                        <button onclick="validarDia(${meta.id})" class="btn-green" ${meta.pausada ? 'disabled style="opacity:0.5;"' : ''}>Validar Día (Check-in)</button>
                         ${botonRojo}
                     `;
                 }
@@ -545,22 +589,41 @@
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>🎯 ${meta.name}</strong><br>
                         Estrategia: <i>${meta.technique}</i><br>
-                        🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
+                        🗓️ Plazo actualizado: ${meta.inicio} al ${meta.fin}<br>
                         <span style="font-size:13px; color:var(--accent);">${cuentaAtrasTexto}</span><br>
                         ${meta.esVariable ? infoProgreso : ('Progreso: ' + meta.saved.toFixed(2) + '€ / ' + meta.amount + '€ (' + Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1) + '%)')}<br>
                         <div class="calc-box">📊 <b>${meta.textoCalculo}</b></div>
                         ${botonesExtra}
-                        <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:6px;">Eliminar Meta</button>
+                        <button onclick="pausarMeta(${meta.id})" class="btn-warning" style="margin-top:4px;">${meta.pausada ? '▶️ Reactivar Meta' : '⏸️ Pausar / Congelar Meta'}</button>
+                        <button onclick="cancelarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">❌ Cancelar / Enviar a Historial</button>
                     </div>
                 `;
             });
         }
 
-        function eliminarMeta(id) {
-            if(confirm('¿Eliminar meta?')) {
-                metas = metas.filter(m => m.id !== id);
-                guardarYRenderizarMetas();
+        function cancelarMeta(id) {
+            if(confirm('¿Deseas cancelar esta meta y enviarla al historial?')) {
+                const meta = metas.find(m => m.id === id);
+                if(meta) {
+                    meta.estadoHistorial = 'Cancelada';
+                    historial.push(meta);
+                    metas = metas.filter(m => m.id !== id);
+                    guardarYRenderizarMetas();
+                }
             }
+        }
+
+        function renderHistorial() {
+            const container = document.getElementById('historialList');
+            if(historial.length === 0) { container.innerHTML = '<span style="font-size:13px; opacity:0.6;">No hay metas en el historial.</span>'; return; }
+            container.innerHTML = '';
+            historial.forEach(h => {
+                container.innerHTML += `
+                    <div style="font-size:13px; background:rgba(0,0,0,0.1); padding:8px; border-radius:6px; margin-top:6px;">
+                        📁 <b>${h.name}</b> - Estado: ${h.estadoHistorial || 'Finalizada'} (Ahorrado: ${h.saved.toFixed(2)}€)
+                    </div>
+                `;
+            });
         }
 
         function renderDeseos() {
@@ -574,11 +637,12 @@
 
         function validarDia(id) {
             const meta = metas.find(m => m.id === id);
-            if(meta) { meta.status = 'green'; guardarYRenderizarMetas(); alert('¡Día validado en verde!'); }
+            if(meta && !meta.pausada) { meta.status = 'green'; guardarYRenderizarMetas(); alert('¡Día validado en verde!'); }
         }
 
         actualizarExplicacion();
         renderMetas();
+        renderHistorial();
         renderDeseos();
     </script>
 </body>
