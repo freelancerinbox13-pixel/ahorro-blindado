@@ -187,7 +187,7 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 2: CREAR Y CALCULAR -->
+    <!-- PESTAÑA 2: CREAR Y CALCULAR (VISTA PREVIA Y OPCIONES DE INICIO) -->
     <div id="tab-crear" class="tab-content">
         <div class="card">
             <h2>🧮 Gestión y Creación de Ahorro</h2>
@@ -224,7 +224,7 @@
                 <div id="bloqueFechas">
                     <div style="display: flex; gap: 10px;">
                         <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
-                        <div style="flex:1;"><label>Fecha Fin (Bloqueo Bóveda):</label><input type="date" id="fechaFin"></div>
+                        <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
                     </div>
                 </div>
 
@@ -263,20 +263,24 @@
                 <input type="number" step="0.01" id="variableMontoInicial" placeholder="Ej. 2.50">
             </div>
 
-            <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular / Preparar Plan</button>
+            <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Generar Vista Previa del Plan</button>
 
-            <div id="resultadoCalculo" class="calc-box" style="display:none;"></div>
-
-            <div style="display: flex; gap: 10px; margin-top: 12px;">
-                <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar y Sellar Bóveda</button>
-                <button class="btn-red" style="flex:1;" onclick="limpiarFormulario()">Cancelar</button>
+            <!-- VISTA PREVIA Y OPCIONES DE INICIO (OCULTO HASTA CALCULAR) -->
+            <div id="vistaPreviaContenedor" style="display:none; margin-top: 15px;">
+                <div id="resultadoCalculo" class="calc-box"></div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                    <button class="btn-green" onclick="comenzarMeta(false)">▶️ Comenzar Normal (Flexible)</button>
+                    <button class="btn-warning" onclick="comenzarMeta(true)">🔒 Comenzar y Sellar Bóveda (Bloqueo Estricto)</button>
+                </div>
             </div>
+
+            <button class="btn-red" onclick="limpiarFormulario()" style="margin-top: 12px;">Cancelar / Limpiar</button>
         </div>
     </div>
 
     <!-- PESTAÑA 3: PSICOLOGÍA Y HUCHAS -->
     <div id="tab-psico" class="tab-content">
-        <!-- HUCHA ANTI-CAPRICHOS -->
         <div class="card">
             <h2>☕ Hucha Anti-Caprichos</h2>
             <label>Concepto (Café, Caña...):</label>
@@ -286,7 +290,6 @@
             <button class="btn-green" onclick="sumarAntiCapricho()">A sumar a la Meta Activa</button>
         </div>
 
-        <!-- REGLA DE LAS 48 HORAS -->
         <div class="card">
             <h2>⏳ Filtro Anti-Impulsos (Regla 48h)</h2>
             <label>Producto deseado:</label>
@@ -300,7 +303,6 @@
 
     <!-- PESTAÑA 4: AJUSTES E HISTORIAL -->
     <div id="tab-ajustes" class="tab-content">
-        <!-- CONFIGURACIÓN CRIPTO -->
         <div class="card" id="cardCrypto">
             <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
             <p style="font-size: 13px; opacity: 0.8;">Vincula una wallet (USDT/USDC) para tu ahorro serio:</p>
@@ -310,14 +312,13 @@
             <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
         </div>
 
-        <!-- HISTORIAL -->
         <div class="card">
             <h2>📜 Historial de Metas (Finalizadas / Canceladas)</h2>
             <div id="historialList">No hay metas en el historial.</div>
         </div>
     </div>
 
-    <!-- BOTONES FLOTANTES (CALCULADORA Y WALLET) -->
+    <!-- BOTONES FLOTANTES -->
     <div class="float-container">
         <button class="float-btn" onclick="irAWallet()" title="Ir a Cartera Crypto">🔗</button>
         <button class="float-btn" onclick="toggleModalCalc()" title="Calculadora Rápida">🧮</button>
@@ -390,7 +391,7 @@
         }
 
         const explicaciones = {
-            meta: "💡 <b>Meta de Compra:</b> Sella tu bóveda por el tiempo seleccionado. No se permite retirar fondos hasta que se cumpla el plazo.",
+            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo. Puedes sellar la bóveda para bloquear retiradas hasta el plazo final.",
             sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto apartar de tus ingresos netos mensuales según reglas financieras.",
             variable: "💡 <b>Ahorro Variable:</b> Acumula la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible."
         };
@@ -417,7 +418,7 @@
             document.getElementById('seccionMeta').style.display = tipo === 'meta' ? 'block' : 'none';
             document.getElementById('seccionSueldo').style.display = tipo === 'sueldo' ? 'block' : 'none';
             document.getElementById('seccionVariable').style.display = tipo === 'variable' ? 'block' : 'none';
-            document.getElementById('resultadoCalculo').style.display = 'none';
+            document.getElementById('vistaPreviaContenedor').style.display = 'none';
             actualizarExplicacion();
         }
 
@@ -433,7 +434,7 @@
             document.getElementById('sueldoNeto').value = '';
             document.getElementById('variableName').value = '';
             document.getElementById('variableMontoInicial').value = '';
-            document.getElementById('resultadoCalculo').style.display = 'none';
+            document.getElementById('vistaPreviaContenedor').style.display = 'none';
             calculoTemporal = null;
             alert('Formulario limpiado.');
         }
@@ -456,7 +457,7 @@
                     if(!inicio || !fin) { alert('Selecciona fechas.'); return; }
                     const d1 = new Date(inicio), d2 = new Date(fin);
                     daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
-                    textoCalculo = `Meta con Bóveda Sellada (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
+                    textoCalculo = `Meta (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
                     if(isNaN(aporte) || aporte <= 0) { alert('Introduce aporte mensual.'); return; }
@@ -465,7 +466,7 @@
                     daysLeft = Math.ceil(meses * 30);
                     const f = new Date(); f.setDate(f.getDate() + daysLeft);
                     fin = f.toISOString().split('T')[0];
-                    textoCalculo = `Meta con Bóveda Sellada (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
+                    textoCalculo = `Meta (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
@@ -497,13 +498,12 @@
 
             calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable, montoInicial };
 
-            const box = document.getElementById('resultadoCalculo');
-            box.style.display = 'block';
-            box.innerHTML = `📌 <b>Resultado:</b><br>${textoCalculo}`;
+            document.getElementById('vistaPreviaContenedor').style.display = 'block';
+            document.getElementById('resultadoCalculo').innerHTML = `📌 <b>Vista Previa del Plan:</b><br>${textoCalculo}`;
         }
 
-        function comenzarMeta() {
-            if(!calculoTemporal) { alert('Calcula el plan primero.'); return; }
+        function comenzarMeta(sellarBoveda) {
+            if(!calculoTemporal) { alert('Genera la vista previa del plan primero.'); return; }
 
             const nuevaMeta = {
                 id: Date.now(),
@@ -520,20 +520,20 @@
                 pausada: false,
                 diasPausadosTotales: 0,
                 ultimaPausa: null,
-                bloqueada: true // Bóveda blindada por defecto
+                bloqueada: sellarBoveda // Se sella o no según el botón pulsado
             };
 
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
             limpiarFormulario();
-            alert('¡Meta creada y Bóveda Sellada con éxito!');
+            alert(sellarBoveda ? '¡Meta creada y Bóveda Sellada con éxito!' : '¡Meta creada en modo flexible!');
             switchTab('metas');
         }
 
         function intentarRetirada(id) {
             const meta = metas.find(m => m.id === id);
             if(meta && meta.bloqueada) {
-                alert('🔒 ¡BÓVEDA BLOQUEADA! Este ahorro está sellado por tiempo. No puedes retirar ni desbloquear los fondos hasta que se cumpla la fecha límite.');
+                alert('🔒 ¡BÓVEDA BLOQUEADA! Este ahorro está sellado por tiempo. No puedes retirar fondos hasta que se cumpla la fecha límite.');
             }
         }
 
@@ -641,14 +641,14 @@
                     const diffTime = fechaFinObj - hoy;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     if(diffDays <= 0) {
-                        meta.bloqueada = false; // Se libera la bóveda al cumplirse el plazo
+                        meta.bloqueada = false;
                     }
 
                     if(meta.pausada) {
                         cuentaAtrasTexto = `⏸️ <b>Meta pausada</b>`;
                     } else if(diffDays > 0) {
                         const meses = (diffDays / 30).toFixed(1);
-                        cuentaAtrasTexto = `🔒 <b>Bóveda Sellada</b> - Quedan <b>${diffDays} días</b> (~${meses} meses)`;
+                        cuentaAtrasTexto = `${meta.bloqueada ? '🔒 <b>Bóveda Sellada</b>' : '⏳'} - Quedan <b>${diffDays} días</b> (~${meses} meses)`;
                     } else {
                         cuentaAtrasTexto = `🔓 <b>¡Plazo cumplido! Bóveda abierta.</b>`;
                     }
