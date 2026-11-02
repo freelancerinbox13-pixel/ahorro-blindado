@@ -303,9 +303,9 @@
         }
 
         const explicaciones = {
-            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo (como un ordenador o un coche). La app calcula el ritmo diario o el tiempo necesario para alcanzarlo.",
-            sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto debes apartar de tus ingresos netos mensuales según reglas fijas de finanzas personales.",
-            variable: "💡 <b>Ahorro Variable:</b> Ideal para acumular la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible introduciendo el monto directamente."
+            meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo. La app calcula el ritmo diario o el tiempo necesario para alcanzarlo.",
+            sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto apartar de tus ingresos netos mensuales según reglas financieras.",
+            variable: "💡 <b>Ahorro Variable:</b> Acumula la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible."
         };
 
         function actualizarExplicacion() {
@@ -381,7 +381,7 @@
                     daysLeft = Math.ceil(meses * 30);
                     const f = new Date(); f.setDate(f.getDate() + daysLeft);
                     fin = f.toISOString().split('T')[0];
-                    textoCalculo = `Meta (${name}): Pagando${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
+                    textoCalculo = `Meta (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
@@ -415,7 +415,57 @@
 
             const box = document.getElementById('resultadoCalculo');
             box.style.display = 'block';
-            box.innerHTML = `📌 <b>Resultado:</b><br>${textoCalculo}`; }  function comenzarMeta() { if(!calculoTemporal) { alert('Calcula el plan primero.'); return; }  const nuevaMeta = { id: Date.now(), name: calculoTemporal.name, amount: calculoTemporal.amount, technique: calculoTemporal.technique, inicio: calculoTemporal.inicio, fin: calculoTemporal.fin, textoCalculo: calculoTemporal.textoCalculo, saved: calculoTemporal.montoInicial \vert{}\vert{} 0, daysLeft: calculoTemporal.daysLeft, status: 'red', esVariable: calculoTemporal.esVariable };  metas.push(nuevaMeta); guardarYRenderizarMetas(); limpiarFormulario(); alert('¡Meta creada con éxito!'); }  function sumarAporteLibre(id) { const extra = prompt('¿Cuánto deseas sumar (Sobrante, Vuelta, Anti-capricho)? (€):'); const monto = parseFloat(extra); if(!isNaN(monto) && monto > 0) { const meta = metas.find(m => m.id === id); if(meta) { meta.saved += monto; guardarYRenderizarMetas(); alert(`¡Sumados ${monto}€ correctamente!`);
+            box.innerHTML = `📌 <b>Resultado:</b><br>${textoCalculo}`;
+        }
+
+        function comenzarMeta() {
+            if(!calculoTemporal) { alert('Calcula el plan primero.'); return; }
+
+            const nuevaMeta = {
+                id: Date.now(),
+                name: calculoTemporal.name,
+                amount: calculoTemporal.amount,
+                technique: calculoTemporal.technique,
+                inicio: calculoTemporal.inicio,
+                fin: calculoTemporal.fin,
+                textoCalculo: calculoTemporal.textoCalculo,
+                saved: calculoTemporal.montoInicial || 0,
+                daysLeft: calculoTemporal.daysLeft,
+                status: 'red',
+                esVariable: calculoTemporal.esVariable
+            };
+
+            metas.push(nuevaMeta);
+            guardarYRenderizarMetas();
+            limpiarFormulario();
+            alert('¡Meta creada con éxito!');
+        }
+
+        function repararRojo(id) {
+            const extra = prompt('Para limpiar el rojo y volver al verde, introduce un aporte de compensación (€):');
+            const monto = parseFloat(extra);
+            if(!isNaN(monto) && monto > 0) {
+                const meta = metas.find(m => m.id === id);
+                if(meta) {
+                    meta.saved += monto;
+                    meta.status = 'green'; // Se limpia el rojo y pasa a verde
+                    guardarYRenderizarMetas();
+                    alert(`¡Rojo reparado! Se han sumado ${monto}€ y la racha vuelve a estar en verde 🟢.`);
+                }
+            } else {
+                alert('Importe no válido.');
+            }
+        }
+
+        function sumarAporteLibre(id) {
+            const extra = prompt('¿Cuánto deseas sumar (Sobrante, Vuelta, Anti-capricho)? (€):');
+            const monto = parseFloat(extra);
+            if(!isNaN(monto) && monto > 0) {
+                const meta = metas.find(m => m.id === id);
+                if(meta) {
+                    meta.saved += monto;
+                    guardarYRenderizarMetas();
+                    alert(`¡Sumados ${monto}€ correctamente!`);
                 }
             } else { alert('Importe no válido.'); }
         }
@@ -454,12 +504,82 @@
             const container = document.getElementById('metasList');
             if(metas.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay metas activas.</p>'; return; }
             container.innerHTML = '';
+            
+            const hoy = new Date();
+
             metas.forEach(meta => {
                 let infoProgreso = '', botonesExtra = '';
+                
+                // Cálculo de cuenta atrás en tiempo real
+                let cuentaAtrasTexto = 'Plazo indefinido';
+                if(meta.fin !== 'Indefinido') {
+                    const fechaFinObj = new Date(meta.fin);
+                    const diffTime = fechaFinObj - hoy;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if(diffDays > 0) {
+                        const meses = (diffDays / 30).toFixed(1);
+                        cuentaAtrasTexto = `⏳ Quedan <b>${diffDays} días</b> (~${meses} meses) para el desbloqueo`;
+                    } else {
+                        cuentaAtrasTexto = `🔓 <b>¡Plazo de bloqueo cumplido! Bóveda liberada.</b>`;
+                    }
+                }
+
                 if(meta.esVariable) {
                     infoProgreso = `Acumulado actual: <b>${meta.saved.toFixed(2)}€</b>`;
                     botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green">➕ Registrar Sobrante / Vuelta / Anti-Capricho</button>`;
                 } else {
                     const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
-                    infoProgreso = `Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)`;
-                    botonesExtra = `Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br><button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check
+                    progresoTexto = `Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)`;
+                    
+                    let estadoHtml = meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴 (Falta ahorro)';
+                    let botonRojo = meta.status === 'red' ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar Día (Quitar Rojo)</button>` : '';
+
+                    botonesExtra = `
+                        Estado hoy: <span class="status-box status-${meta.status}"></span> ${estadoHtml}<br>
+                        <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
+                        ${botonRojo}
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+                        <strong>🎯 ${meta.name}</strong><br>
+                        Estrategia: <i>${meta.technique}</i><br>
+                        🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
+                        <span style="font-size:13px; color:var(--accent);">${cuentaAtrasTexto}</span><br>
+                        ${meta.esVariable ? infoProgreso : ('Progreso: ' + meta.saved.toFixed(2) + '€ / ' + meta.amount + '€ (' + Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1) + '%)')}<br>
+                        <div class="calc-box">📊 <b>${meta.textoCalculo}</b></div>
+                        ${botonesExtra}
+                        <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:6px;">Eliminar Meta</button>
+                    </div>
+                `;
+            });
+        }
+
+        function eliminarMeta(id) {
+            if(confirm('¿Eliminar meta?')) {
+                metas = metas.filter(m => m.id !== id);
+                guardarYRenderizarMetas();
+            }
+        }
+
+        function renderDeseos() {
+            const container = document.getElementById('deseosList');
+            if(deseos.length === 0) { container.innerHTML = '<span style="font-size:13px; opacity:0.6;">No hay impulsos congelados.</span>'; return; }
+            container.innerHTML = '';
+            deseos.forEach(d => {
+                container.innerHTML += `<div style="font-size:13px; background:rgba(0,0,0,0.1); padding:6px; border-radius:6px; margin-top:4px;">⏳ <b>${d.nombre}</b> (${d.precio}€) - 48h</div>`;
+            });
+        }
+
+        function validarDia(id) {
+            const meta = metas.find(m => m.id === id);
+            if(meta) { meta.status = 'green'; guardarYRenderizarMetas(); alert('¡Día validado en verde!'); }
+        }
+
+        actualizarExplicacion();
+        renderMetas();
+        renderDeseos();
+    </script>
+</body>
+</html>
