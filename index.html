@@ -90,54 +90,72 @@
         <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
     </div>
 
-    <!-- SECCIÓN: NUEVA META Y CALCULADORA -->
+    <!-- SECCIÓN: SELECCIÓN DE TIPO DE AHORRO -->
     <div class="card">
-        <h2>🧮 Calculadora y Programación de Meta</h2>
-        <label>¿Qué quieres comprar? (Ej. Anillo, Coche, TV)</label>
-        <input type="text" id="metaName" placeholder="Nombre de la meta">
+        <h2>🧮 Calculadora de Ahorro</h2>
         
-        <label>Importe objetivo (€ / USDT)</label>
-        <input type="number" id="metaAmount" placeholder="100">
-
-        <label>Modo de Cálculo:</label>
-        <select id="modoCalculo" onchange="cambiarModo()">
-            <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
-            <option value="cuota">Sé cuánto puedo pagar (Calcular tiempo necesario)</option>
+        <label>¿Qué tipo de cálculo deseas hacer?</label>
+        <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
+            <option value="meta">Meta de Compra (Ordenador, Coche, TV...)</option>
+            <option value="sueldo">Ahorro por Porcentaje de Sueldo / Ingresos</option>
         </select>
 
-        <div id="bloqueFechas">
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1;">
-                    <label>Fecha de Inicio:</label>
-                    <input type="date" id="fechaInicio">
-                </div>
-                <div style="flex:1;">
-                    <label>Fecha de Fin:</label>
-                    <input type="date" id="fechaFin">
+        <!-- BLOQUE 1: METAS DE COMPRA -->
+        <div id="seccionMeta">
+            <label>¿Qué quieres comprar?</label>
+            <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche...">
+            
+            <label>Importe objetivo (€ / USDT)</label>
+            <input type="number" id="metaAmount" placeholder="1200">
+
+            <label>Modo de Plazo:</label>
+            <select id="modoCalculo" onchange="cambiarModoPlazo()">
+                <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
+                <option value="cuota">Sé cuánto puedo pagar al mes (Calcular tiempo)</option>
+            </select>
+
+            <div id="bloqueFechas">
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex:1;">
+                        <label>Fecha de Inicio:</label>
+                        <input type="date" id="fechaInicio">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Fecha de Fin:</label>
+                        <input type="date" id="fechaFin">
+                    </div>
                 </div>
             </div>
+
+            <div id="bloqueCuota" style="display:none;">
+                <label>¿Cuánto puedes aportar por mes (€)?</label>
+                <input type="number" id="aporteMensual" placeholder="Ej. 50">
+            </div>
+
+            <label>Estrategia de Compra:</label>
+            <select id="metaTechniqueMeta">
+                <option value="Corto Plazo (Cuota fija / Reto)">Corto Plazo (Cuota fija / Reto - Ej. Ordenador / TV)</option>
+                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado - Ej. Coche)</option>
+                <option value="Presupuesto Base Cero">Presupuesto Base Cero</option>
+                <option value="Hucha de Redondeo">Hucha de Redondeo</option>
+            </select>
         </div>
 
-        <div id="bloqueCuota" style="display:none;">
-            <label>¿Cuánto puedes aportar por mes (€)?</label>
-            <input type="number" id="aporteMensual" placeholder="Ej. 10">
+        <!-- BLOQUE 2: PORCENTAJE DE SUELDO -->
+        <div id="seccionSueldo" style="display:none;">
+            <label>Tus ingresos netos mensuales (€):</label>
+            <input type="number" id="sueldoNeto" placeholder="Ej. 2000">
+
+            <label>Regla de Porcentajes:</label>
+            <select id="metaTechniqueSueldo">
+                <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
+                <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
+            </select>
         </div>
 
-        <label>Metodología / Estrategia:</label>
-        <select id="metaTechnique">
-            <option value="Corto Plazo">Corto Plazo (Cuota fija / Reto)</option>
-            <option value="Medio/Largo Plazo">Medio/Largo Plazo (Fondo dedicado)</option>
-            <option value="Regla 50/30/20">Regla 50 / 30 / 20</option>
-            <option value="Regla 70/20/10">Regla 70 / 20 / 10</option>
-            <option value="Presupuesto Base Cero">Presupuesto Base Cero</option>
-            <option value="Hucha de Redondeo">Hucha de Redondeo</option>
-        </select>
+        <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular Plan</button>
 
-        <button class="btn-warning" onclick="calcularPlan()">🔍 Calcular Plan de Ahorro</button>
-
-        <div id="resultadoCalculo" class="calc-box" style="display:none;">
-            <!-- Aquí aparecerá el resultado del cálculo -->
-        </div>
+        <div id="resultadoCalculo" class="calc-box" style="display:none;"></div>
 
         <div style="display: flex; gap: 10px; margin-top: 12px;">
             <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
@@ -190,7 +208,19 @@
             alert('Billetera guardada.');
         }
 
-        function cambiarModo() {
+        function cambiarTipoCalculadora() {
+            const tipo = document.getElementById('tipoCalculadora').value;
+            if(tipo === 'meta') {
+                document.getElementById('seccionMeta').style.display = 'block';
+                document.getElementById('seccionSueldo').style.display = 'none';
+            } else {
+                document.getElementById('seccionMeta').style.display = 'none';
+                document.getElementById('seccionSueldo').style.display = 'block';
+            }
+            document.getElementById('resultadoCalculo').style.display = 'none';
+        }
+
+        function cambiarModoPlazo() {
             const modo = document.getElementById('modoCalculo').value;
             if(modo === 'fechas') {
                 document.getElementById('bloqueFechas').style.display = 'block';
@@ -205,6 +235,7 @@
         function limpiarFormulario() {
             document.getElementById('metaName').value = '';
             document.getElementById('metaAmount').value = '';
+            document.getElementById('sueldoNeto').value = '';
             document.getElementById('fechaInicio').value = '';
             document.getElementById('fechaFin').value = '';
             document.getElementById('aporteMensual').value = '';
@@ -214,69 +245,92 @@
         }
 
         function calcularPlan() {
-            const name = document.getElementById('metaName').value;
-            const amount = parseFloat(document.getElementById('metaAmount').value);
-            const modo = document.getElementById('modoCalculo').value;
+            const tipo = document.getElementById('tipoCalculadora').value;
+            let name, amount, technique, inicio, fin, daysLeft, textoCalculo;
 
-            if(!name || isNaN(amount) || amount <= 0) {
-                alert('Introduce primero el nombre de la meta y un importe objetivo válido.');
-                return;
-            }
+            if(tipo === 'meta') {
+                name = document.getElementById('metaName').value;
+                amount = parseFloat(document.getElementById('metaAmount').value);
+                technique = document.getElementById('metaTechniqueMeta').value;
+                const modo = document.getElementById('modoCalculo').value;
 
-            let inicio, fin, daysLeft, textoCalculo;
-
-            if(modo === 'fechas') {
-                inicio = document.getElementById('fechaInicio').value;
-                fin = document.getElementById('fechaFin').value;
-                if(!inicio || !fin) {
-                    alert('Selecciona la fecha de inicio y de fin.');
+                if(!name || isNaN(amount) || amount <= 0) {
+                    alert('Introduce el nombre de la meta y un importe objetivo válido.');
                     return;
                 }
-                const d1 = new Date(inicio);
-                const d2 = new Date(fin);
-                daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
-                const diario = (amount / daysLeft).toFixed(2);
-                const mensual = (amount / (daysLeft / 30)).toFixed(2);
-                textoCalculo = `Ritmo necesario: <b>${diario}€/día</b> o <b>${mensual}€/mes</b>`;
+
+                if(modo === 'fechas') {
+                    inicio = document.getElementById('fechaInicio').value;
+                    fin = document.getElementById('fechaFin').value;
+                    if(!inicio || !fin) {
+                        alert('Selecciona la fecha de inicio y de fin.');
+                        return;
+                    }
+                    const d1 = new Date(inicio);
+                    const d2 = new Date(fin);
+                    daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+                    const diario = (amount / daysLeft).toFixed(2);
+                    const mensual = (amount / (daysLeft / 30)).toFixed(2);
+                    textoCalculo = `Meta de compra (${name}): <b>${diario}€/día</b> o <b>${mensual}€/mes</b> necesarios.`;
+                } else {
+                    const aporte = parseFloat(document.getElementById('aporteMensual').value);
+                    if(isNaN(aporte) || aporte <= 0) {
+                        alert('Introduce una cantidad válida que puedas pagar por mes.');
+                        return;
+                    }
+                    inicio = new Date().toISOString().split('T')[0];
+                    const mesesNecesarios = amount / aporte;
+                    daysLeft = Math.ceil(mesesNecesarios * 30);
+                    const fechaFinalObj = new Date();
+                    fechaFinalObj.setDate(fechaFinalObj.getDate() + daysLeft);
+                    fin = fechaFinalObj.toISOString().split('T')[0];
+                    textoCalculo = `Meta de compra (${name}): Pagando ${aporte}€/mes tardarás <b>${mesesNecesarios.toFixed(1)} meses</b>.`;
+                }
             } else {
-                const aporte = parseFloat(document.getElementById('aporteMensual').value);
-                if(isNaN(aporte) || aporte <= 0) {
-                    alert('Introduce una cantidad válida que puedas pagar por mes.');
+                const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
+                technique = document.getElementById('metaTechniqueSueldo').value;
+
+                if(isNaN(sueldo) || sueldo <= 0) {
+                    alert('Introduce tus ingresos netos mensuales.');
                     return;
                 }
+
+                name = `Ahorro por Sueldo (${technique})`;
+                let ahorroMensual = 0;
+                if(technique === 'Regla 50/30/20') {
+                    ahorroMensual = sueldo * 0.20;
+                    textoCalculo = `De tu sueldo de ${sueldo}€, tu <b>20% de ahorro mensual es de ${ahorroMensual.toFixed(2)}€</b> (50% gastos / 30% ocio).`;
+                } else {
+                    ahorroMensual = sueldo * 0.20 + sueldo * 0.10; // 20% ahorro + 10% inversión
+                    textoCalculo = `De tu sueldo de ${sueldo}€, destinas un <b>30% total (${ahorroMensual.toFixed(2)}€/mes)</b> a ahorro e inversión (Regla 70/20/10).`;
+                }
+
+                amount = ahorroMensual * 12; // Anual de referencia
                 inicio = new Date().toISOString().split('T')[0];
-                const mesesNecesarios = amount / aporte;
-                daysLeft = Math.ceil(mesesNecesarios * 30);
-                
                 const fechaFinalObj = new Date();
-                fechaFinalObj.setDate(fechaFinalObj.getDate() + daysLeft);
+                fechaFinalObj.setFullYear(fechaFinalObj.getFullYear() + 1);
                 fin = fechaFinalObj.toISOString().split('T')[0];
-                
-                textoCalculo = `Pagando ${aporte}€/mes tardarás aprox. <b>${mesesNecesarios.toFixed(1)} meses</b> (Fecha estimada fin: ${fin})`;
+                daysLeft = 365;
             }
 
-            calculoTemporal = { inicio, fin, daysLeft, textoCalculo };
+            calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo };
 
             const box = document.getElementById('resultadoCalculo');
             box.style.display = 'block';
-            box.innerHTML = `📌 <b>Resultado del cálculo para "${name}":</b><br>${textoCalculo}`;
+            box.innerHTML = `📌 <b>Resultado del cálculo:</b><br>${textoCalculo}`;
         }
 
         function comenzarMeta() {
             if(!calculoTemporal) {
-                alert('Por favor, pulsa primero el botón de "Calcular Plan de Ahorro".');
+                alert('Por favor, pulsa primero el botón de "Calcular Plan".');
                 return;
             }
 
-            const name = document.getElementById('metaName').value;
-            const amount = parseFloat(document.getElementById('metaAmount').value);
-            const technique = document.getElementById('metaTechnique').value;
-
             const nuevaMeta = {
                 id: Date.now(),
-                name,
-                amount,
-                technique,
+                name: calculoTemporal.name,
+                amount: calculoTemporal.amount,
+                technique: calculoTemporal.technique,
                 inicio: calculoTemporal.inicio,
                 fin: calculoTemporal.fin,
                 textoCalculo: calculoTemporal.textoCalculo,
