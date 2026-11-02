@@ -43,6 +43,7 @@
         }
         button:active { opacity: 0.8; }
         .btn-green { background-color: var(--green); color: white; }
+        .btn-red { background-color: var(--red); color: white; }
         .btn-warning { background-color: var(--warning); color: #0f172a; }
         .status-box {
             display: inline-block;
@@ -64,60 +65,90 @@
             color: white;
             box-sizing: border-box;
         }
+        .calc-box {
+            background: #0b0f19;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #38bdf8;
+        }
     </style>
 </head>
 <body>
 
     <h1>🛡️ Ahorro Blindado</h1>
 
-    <!-- SECCIÓN: NUEVA META -->
+    <!-- SECCIÓN: CONFIGURACIÓN CRIPTO (OPCIONAL) -->
     <div class="card">
-        <h2>Crear Meta de Ahorro</h2>
-        <label>¿Qué quieres comprar? (Ej. Ordenador, Coche, Televisor)</label>
+        <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
+        <p style="font-size: 13px; color: #94a3b8;">Vincula una wallet (USDT/USDC en Polygon o Arbitrum) para desviar tu ahorro serio a largo plazo:</p>
+        <label>Dirección o URL de la Wallet:</label>
+        <input type="text" id="cryptoWallet" placeholder="Ej. 0xYourWalletAddress... o polygon:...">
+        <button onclick="guardarWallet()" style="background:#6366f1; color:white;">Guardar Billetera</button>
+        <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
+    </div>
+
+    <!-- SECCIÓN: NUEVA META PROGRAMABLE -->
+    <div class="card">
+        <h2>Crear y Programar Meta</h2>
+        <label>¿Qué quieres comprar? (Ej. Coche, Ordenador, TV)</label>
         <input type="text" id="metaName" placeholder="Nombre de la meta">
         
-        <label>Importe objetivo (€)</label>
+        <label>Importe objetivo (€ / USDT)</label>
         <input type="number" id="metaAmount" placeholder="1200">
 
         <label>Metodología / Estrategia:</label>
         <select id="metaTechnique">
-            <option value="Corto Plazo (Cuota fija / Reto)">Corto Plazo (Ordenador / TV - Cuota fija o Reto)</option>
-            <option value="Medio/Largo Plazo (Fondo 50/30/20)">Medio/Largo Plazo (Coche - Fondo dedicado)</option>
-            <option value="Regla 50/30/20">Regla 50 / 30 / 20 (General)</option>
-            <option value="Regla 70/20/10">Regla 70 / 20 / 10 (Vida / Ahorro / Inversión)</option>
+            <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
+            <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo Coche)</option>
+            <option value="Regla 50/30/20">Regla 50 / 30 / 20</option>
+            <option value="Regla 70/20/10">Regla 70 / 20 / 10</option>
             <option value="Presupuesto Base Cero">Presupuesto Base Cero</option>
-            <option value="Hucha de Redondeo">Hucha de Redondeo por Tarjeta</option>
+            <option value="Hucha de Redondeo">Hucha de Redondeo</option>
         </select>
 
-        <label>Días de bloqueo (Plazo límite):</label>
-        <input type="number" id="metaDays" placeholder="30">
+        <div style="display: flex; gap: 10px;">
+            <div style="flex:1;">
+                <label>Fecha de Inicio:</label>
+                <input type="date" id="fechaInicio">
+            </div>
+            <div style="flex:1;">
+                <label>Fecha de Fin (Bloqueo):</label>
+                <input type="date" id="fechaFin">
+            </div>
+        </div>
 
-        <button onclick="crearMeta()">Guardar y Bloquear Meta</button>
+        <label>Cuota o Porcentaje programado:</label>
+        <input type="text" id="metaCuota" placeholder="Ej. 50€ al mes o 20%">
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
+            <button class="btn-red" style="flex:1;" onclick="limpiarFormulario()">Cancelar</button>
+        </div>
     </div>
 
     <!-- SECCIÓN: MIS METAS ACTIVAS -->
     <div class="card">
-        <h2>Mis Metas Activas</h2>
+        <h2>Mis Metas Activas Programadas</h2>
         <div id="metasList">Cargando metas...</div>
     </div>
 
-    <!-- SECCIÓN: ANTI-CAPRICHOS PERSONALIZABLES -->
+    <!-- SECCIÓN: ANTI-CAPRICHOS -->
     <div class="card">
         <h2>☕ Hucha Anti-Caprichos</h2>
-        <p style="font-size: 14px; color: #94a3b8;">Registra lo ahorrado al evitar pequeños gastos diarios:</p>
-        <label>Concepto (Café, Caña, Snack...):</label>
+        <label>Concepto (Café, Caña...):</label>
         <input type="text" id="caprichoConcepto" placeholder="Ej. Café evitado">
         <label>Importe ahorrado (€):</label>
         <input type="number" step="0.01" id="caprichoMonto" placeholder="1.50">
         <button class="btn-green" onclick="sumarAntiCapricho()">A sumar a la Meta Activa</button>
     </div>
 
-    <!-- SECCIÓN: REGLA DE LAS 48 HORAS (PSICOLÓGICO) -->
+    <!-- SECCIÓN: REGLA DE LAS 48 HORAS -->
     <div class="card">
         <h2>⏳ Filtro Anti-Impulsos (Regla 48h)</h2>
-        <p style="font-size: 14px; color: #94a3b8;">Apunta un capricho tentador y congélalo 48 horas:</p>
         <label>Producto deseado:</label>
-        <input type="text" id=" deseoNombre" placeholder="Ej. Zapatillas nuevas">
+        <input type="text" id="deseoNombre" placeholder="Ej. Zapatillas">
         <label>Precio (€):</label>
         <input type="number" id="deseoPrecio" placeholder="80">
         <button class="btn-warning" onclick="agregarDeseo()">Congelar Capricho (48h)</button>
@@ -127,36 +158,70 @@
     <script>
         let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
+        let wallet = localStorage.getItem('ahorro_wallet') || '';
 
-        function crearMeta() {
+        if(wallet) {
+            document.getElementById('cryptoWallet').value = wallet;
+            document.getElementById('walletStatus').innerText = 'Wallet vinculada: ' + wallet.substring(0, 15) + '...';
+        }
+
+        function guardarWallet() {
+            wallet = document.getElementById('cryptoWallet').value;
+            localStorage.setItem('ahorro_wallet', wallet);
+            document.getElementById('walletStatus').innerText = wallet ? 'Wallet vinculada correctamente.' : '';
+            alert('Configuración de billetera guardada.');
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('metaName').value = '';
+            document.getElementById('metaAmount').value = '';
+            document.getElementById('fechaInicio').value = '';
+            document.getElementById('fechaFin').value = '';
+            document.getElementById('metaCuota').value = '';
+            alert('Formulario cancelado.');
+        }
+
+        function comenzarMeta() {
             const name = document.getElementById('metaName').value;
-            const amount = document.getElementById('metaAmount').value;
+            const amount = parseFloat(document.getElementById('metaAmount').value);
             const technique = document.getElementById('metaTechnique').value;
-            const days = document.getElementById('metaDays').value;
+            const inicio = document.getElementById('fechaInicio').value;
+            const fin = document.getElementById('fechaFin').value;
+            const cuota = document.getElementById('metaCuota').value;
 
-            if(!name || !amount) {
-                alert('Rellena el nombre y el importe objetivo.');
+            if(!name || isNaN(amount) || amount <= 0 || !inicio || !fin) {
+                alert('Rellena el nombre, importe, fecha de inicio y fecha de fin.');
                 return;
             }
+
+            // Calcular días totales entre inicio y fin
+            const d1 = new Date(inicio);
+            const d2 = new Date(fin);
+            const diffTime = Math.abs(d2 - d1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
 
             const nuevaMeta = {
                 id: Date.now(),
                 name,
-                amount: parseFloat(amount),
+                amount,
                 technique,
+                inicio,
+                fin,
+                cuota: cuota || 'Automática',
                 saved: 0,
-                daysLeft: parseInt(days) || 30,
+                daysLeft: diffDays,
                 status: 'red'
             };
 
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
-            alert('¡Meta creada y blindada!');
+            limpiarFormulario();
+            alert('¡Meta programada, iniciada y blindada con éxito!');
         }
 
         function sumarAntiCapricho() {
             if(metas.length === 0) {
-                alert('Crea una meta primero.');
+                alert('Crea y comienza una meta primero.');
                 return;
             }
             const concepto = document.getElementById('caprichoConcepto').value || 'Gasto evitado';
@@ -170,7 +235,7 @@
             metas[0].saved += monto;
             metas[0].status = 'green';
             guardarYRenderizarMetas();
-            alert(`¡Anotado! ${monto}€ de "${concepto}" sumados a tu meta.`);
+            alert(`¡Anotado! ${monto}€ de "${concepto}" sumados.`);
             document.getElementById('caprichoConcepto').value = '';
             document.getElementById('caprichoMonto').value = '';
         }
@@ -194,23 +259,41 @@
         function renderMetas() {
             const container = document.getElementById('metasList');
             if(metas.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas.</p>';
+                container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas programadas.</p>';
                 return;
             }
             container.innerHTML = '';
             metas.forEach(meta => {
                 const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
+                const restante = Math.max(0, meta.amount - meta.saved);
+                const dias = meta.daysLeft > 0 ? meta.daysLeft : 1;
+                const ahorroDiario = (restante / dias).toFixed(2);
+
                 container.innerHTML += `
-                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>🎯 ${meta.name}</strong><br>
                         Estrategia: <i>${meta.technique}</i><br>
+                        🗓️ Del ${meta.inicio} al ${meta.fin} (${meta.daysLeft} días)<br>
+                        💰 Cuota programada: <b>${meta.cuota}</b><br>
                         Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)<br>
-                        Plazo límite: ${meta.daysLeft} días<br>
+                        
+                        <div class="calc-box">
+                            📊 Ritmo diario necesario: <b>${ahorroDiario} € / día</b>
+                        </div>
+
                         Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
                         <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
+                        <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">Eliminar / Cancelar Meta</button>
                     </div>
                 `;
             });
+        }
+
+        function eliminarMeta(id) {
+            if(confirm('¿Seguro que deseas cancelar y eliminar esta meta?')) {
+                metas = metas.filter(m => m.id !== id);
+                guardarYRenderizarMetas();
+            }
         }
 
         function renderDeseos() {
