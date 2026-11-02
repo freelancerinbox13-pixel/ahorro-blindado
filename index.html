@@ -125,22 +125,30 @@
             border-left: 3px solid var(--accent);
             opacity: 0.9;
         }
-        .float-calc {
+        /* Botones Flotantes */
+        .float-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999;
+        }
+        .float-btn {
             background: var(--accent);
             color: #fff;
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             cursor: pointer;
-            z-index: 999;
+            border: none;
+            margin: 0;
         }
         #modalCalc {
             display: none;
@@ -168,7 +176,7 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('metas')">🎯 Mis Metas</button>
         <button class="tab-btn" onclick="switchTab('crear')">➕ Crear</button>
-        <button class="tab-btn" onclick="switchTab('psico')">🧠 Psico & Huchas</button>
+        <button class="tab-btn" onclick="switchTab('psico')">🧠 Psico</button>
         <button class="tab-btn" onclick="switchTab('ajustes')">⚙️ Ajustes</button>
     </div>
 
@@ -294,7 +302,7 @@
     <!-- PESTAÑA 4: AJUSTES E HISTORIAL -->
     <div id="tab-ajustes" class="tab-content">
         <!-- CONFIGURACIÓN CRIPTO -->
-        <div class="card">
+        <div class="card" id="cardCrypto">
             <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
             <p style="font-size: 13px; opacity: 0.8;">Vincula una wallet (USDT/USDC) para tu ahorro serio:</p>
             <label>Dirección o URL de la Wallet:</label>
@@ -310,8 +318,13 @@
         </div>
     </div>
 
-    <!-- BOTÓN Y VENTANA FLOTANTE DE CALCULADORA -->
-    <div class="float-calc" onclick="toggleModalCalc()">🧮</div>
+    <!-- BOTONES FLOTANTES (CALCULADORA Y WALLET) -->
+    <div class="float-container">
+        <button class="float-btn" onclick="irAWallet()" title="Ir a Cartera Crypto">🔗</button>
+        <button class="float-btn" onclick="toggleModalCalc()" title="Calculadora Rápida">🧮</button>
+    </div>
+
+    <!-- VENTANA MODAL CALCULADORA -->
     <div id="modalCalc">
         <h3 style="margin-top:0; color:var(--accent);">Calculadora Rápida</h3>
         <input type="text" id="calcDisplay" readonly style="background:#000; color:#0ff; text-align:right; font-size:18px;">
@@ -339,7 +352,22 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            
+            // Buscar y activar el botón correspondiente
+            const buttons = document.querySelectorAll('.tab-btn');
+            if(tabId === 'metas') buttons[0].classList.add('active');
+            if(tabId === 'crear') buttons[1].classList.add('active');
+            if(tabId === 'psico') buttons[2].classList.add('active');
+            if(tabId === 'ajustes') buttons[3].classList.add('active');
+        }
+
+        function irAWallet() {
+            switchTab('ajustes');
+            // Hacer scroll o destacar visualmente la tarjeta crypto
+            const card = document.getElementById('cardCrypto');
+            card.style.border = '2px solid var(--accent)';
+            setTimeout(() => { card.style.border = '1px solid var(--border)'; }, 1500);
+            card.scrollIntoView({ behavior: 'smooth' });
         }
 
         function toggleTheme() {
@@ -501,7 +529,7 @@
             guardarYRenderizarMetas();
             limpiarFormulario();
             alert('¡Meta creada con éxito!');
-            switchTab('metas'); // Te lleva directo a ver tus metas
+            switchTab('metas');
         }
 
         function pausarMeta(id) {
