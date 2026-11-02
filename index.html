@@ -453,36 +453,36 @@
             let name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable = false, montoInicial = 0;
 
             if(tipo === 'meta') {
-                name = document.getElementById('metaName').value;
+                name = document.getElementById('metaName').value.trim();
                 amount = parseFloat(document.getElementById('metaAmount').value);
                 technique = document.getElementById('metaTechniqueMeta').value;
                 const modo = document.getElementById('modoCalculo').value;
 
-                if(!name || isNaN(amount) || amount <= 0) { alert('Introduce nombre e importe.'); return; }
+                if(!name) { alert('⚠️ Por favor, introduce un nombre para lo que quieres comprar.'); return; }
+                if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe objetivo válido.'); return; }
 
                 if(modo === 'fechas') {
                     inicio = document.getElementById('fechaInicio').value;
                     fin = document.getElementById('fechaFin').value;
-                    if(!inicio || !fin) { alert('Selecciona fechas de inicio y fin.'); return; }
+                    if(!inicio || !fin) { alert('⚠️ Selecciona tanto la fecha de inicio como la fecha de fin.'); return; }
                     
                     const d1 = new Date(inicio), d2 = new Date(fin);
                     const diffTime = d2 - d1;
                     daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                     if(daysLeft <= 0) {
-                        alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio.');
+                        alert('⚠️ La fecha de fin debe ser estrictamente posterior a la fecha de inicio.');
                         return;
                     }
 
-                    // Cálculo detallado en meses y días
                     const mesesExactos = Math.floor(daysLeft / 30);
                     const diasSobrantes = daysLeft % 30;
                     let desgloseTiempo = mesesExactos > 0 ? `${mesesExactos} mes(es) y ${diasSobrantes} día(s)` : `${daysLeft} día(s)`;
 
-                    textoCalculo = `Meta (${name}) - Plazo: <b>${desegloseTiempo || desgloseTiempo}</b> (${daysLeft} días total):<br>💰 <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
+                    textoCalculo = `Meta (${name}) - Plazo: <b>${desgloseTiempo}</b> (${daysLeft} días total):<br>💰 <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
-                    if(isNaN(aporte) || aporte <= 0) { alert('Introduce una cuota mensual válida.'); return; }
+                    if(isNaN(aporte) || aporte <= 0) { alert('⚠️ Introduce cuánto puedes aportar por mes.'); return; }
                     inicio = new Date().toISOString().split('T')[0];
                     const meses = amount / aporte;
                     daysLeft = Math.ceil(meses * 30);
@@ -493,12 +493,12 @@
                     const diasSobrantes = daysLeft % 30;
                     let desgloseTiempo = mesesExactos > 0 ? `${mesesExactos} mes(es) y ${diasSobrantes} día(s)` : `${daysLeft} día(s)`;
 
-                    textoCalculo = `Meta (${name}) - Plazo estimado: <b>${desegloseTiempo}</b> (${daysLeft} días):<br>💰 Pagando ${aporte}€/mes.`;
+                    textoCalculo = `Meta (${name}) - Plazo estimado: <b>${desgloseTiempo}</b> (${daysLeft} días):<br>💰 Pagando ${aporte}€/mes.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
                 technique = document.getElementById('metaTechniqueSueldo').value;
-                if(isNaN(sueldo) || sueldo <= 0) { alert('Introduce sueldo.'); return; }
+                if(isNaN(sueldo) || sueldo <= 0) { alert('⚠️ Introduce tus ingresos netos mensuales.'); return; }
 
                 name = `Ahorro por Sueldo (${technique})`;
                 let ahorro = technique === 'Regla 50/30/20' ? sueldo * 0.20 : sueldo * 0.30;
@@ -509,11 +509,11 @@
                 daysLeft = 365;
                 textoCalculo = `Ahorro mensual por sueldo (1 año): <b>${ahorro.toFixed(2)}€/mes</b>.`;
             } else {
-                name = document.getElementById('variableName').value;
+                name = document.getElementById('variableName').value.trim();
                 technique = document.getElementById('metaTechniqueVariable').value;
                 montoInicial = parseFloat(document.getElementById('variableMontoInicial').value) || 0;
 
-                if(!name) { alert('Introduce nombre del fondo variable.'); return; }
+                if(!name) { alert('⚠️ Introduce un nombre para el fondo variable.'); return; }
 
                 amount = 999999;
                 inicio = new Date().toISOString().split('T')[0];
@@ -530,7 +530,7 @@
         }
 
         function comenzarMeta(sellarBoveda) {
-            if(!calculoTemporal) { alert('Genera la vista previa del plan primero.'); return; }
+            if(!calculoTemporal) { alert('⚠️ Genera la vista previa del plan primero.'); return; }
 
             const nuevaMeta = {
                 id: Date.now(),
