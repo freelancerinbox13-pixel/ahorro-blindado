@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahorro Blindado</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent: #38bdf8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --border: #334155;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+        }
+        h1, h2 { text-align: center; color: var(--accent); }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        button {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        button:active { opacity: 0.8; }
+        .flex { display: flex; gap: 8px; }
+        .btn-green { background-color: var(--green); color: white; }
+        .btn-red { background-color: var(--red); color: white; }
+        .status-box {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        .status-green { background-color: var(--green); }
+        .status-red { background-color: var(--red); }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #0f172a;
+            color: white;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🛡️ Ahorro Blindado</h1>
+
+    <!-- SECCIÓN: NUEVA META -->
+    <div class="card">
+        <h2>Crear Meta de Ahorro</h2>
+        <label>¿Qué quieres comprar?</label>
+        <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche, Televisor...">
+        
+        <label>Importe objetivo (€)</label>
+        <input type="number" id="metaAmount" placeholder="1200">
+
+        <label>Técnica de Ahorro:</label>
+        <select id="metaTechnique">
+            <option value="503020">Porcentajes (50/30/20)</option>
+            <option value="reto52">Reto Semanal / 52 Semanas</option>
+            <option value="antistress">Micro-sacrificios (Cafés/Cañas)</option>
+        </select>
+
+        <label>Días de bloqueo (Plazo límite):</label>
+        <input type="number" id="metaDays" placeholder="30">
+
+        <button onclick="crearMeta()">Guardar y Bloquear Meta</button>
+    </div>
+
+    <!-- SECCIÓN: MIS METAS ACTIVAS -->
+    <div class="card">
+        <h2>Mis Metas Activas</h2>
+        <div id="metasList">Cargando metas...</div>
+    </div>
+
+    <!-- SECCIÓN: ANTI-CAPRICHOS DIARIOS -->
+    <div class="card">
+        <h2>☕ Hucha Anti-Caprichos</h2>
+        <p style="font-size: 14px; color: #94a3b8;">Suma lo que te has ahorrado hoy evitando pequeños gastos:</p>
+        <div class="flex">
+            <button class="btn-green" onclick="sumarAhorro(1.5)">Café (1.5€)</button>
+            <button class="btn-green" onclick="sumarAhorro(2.5)">Caña (2.5€)</button>
+            <button class="btn-green" onclick="sumarAhorro(5.0)">Taxi (5€)</button>
+        </div>
+    </div>
+
+    <script>
+        let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
+
+        function crearMeta() {
+            const name = document.getElementById('metaName').value;
+            const amount = document.getElementById('metaAmount').value;
+            const technique = document.getElementById('metaTechnique').value;
+            const days = document.getElementById('metaDays').value;
+
+            if(!name || !amount) {
+                alert('Por favor completa los campos principales');
+                return;
+            }
+
+            const nuevaMeta = {
+                id: Date.now(),
+                name,
+                amount: parseFloat(amount),
+                technique,
+                saved: 0,
+                daysLeft: parseInt(days) || 30,
+                checkedToday: false,
+                status: 'red' // Empieza en rojo hasta que se valide
+            };
+
+            metas.push(nuevaMeta);
+            guardarYRenderizar();
+            alert('¡Meta creada y blindada con éxito!');
+        }
+
+        function sumarAhorro(cuanto) {
+            if(metas.length === 0) {
+                alert('Primero crea una meta arriba.');
+                return;
+            }
+            metas[0].saved += cuanto;
+            metas[0].checkedToday = true;
+            metas[0].status = 'green';
+            guardarYRenderizar();
+            alert(`¡Bien hecho! Has sumado ${cuanto}€ a tu meta.`);
+        }
+
+        function guardarYRenderizar() {
+            localStorage.setItem('ahorro_metas', JSON.stringify(metas));
+            renderMetas();
+        }
+
+        function renderMetas() {
+            const container = document.getElementById('metasList');
+            if(metas.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            metas.forEach(meta => {
+                const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
+                container.innerHTML += `
+                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px;">
+                        <strong>🎯 ${meta.name}</strong><br>
+                        Progreso: ${meta.saved}€ / ${meta.amount}€ (${porcentaje}%)<br>
+                        Plazo restante: ${meta.daysLeft} días<br>
+                        Estado de hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
+                        <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
+                    </div>
+                `;
+            });
+        }
+
+        function validarDia(id) {
+            const meta = metas.find(m => m.id === id);
+            if(meta) {
+                meta.checkedToday = true;
+                meta.status = 'green';
+                guardarYRenderizar();
+                alert('¡Día validado en verde!');
+            }
+        }
+
+        renderMetas();
+    </script>
+</body>
+</html>
