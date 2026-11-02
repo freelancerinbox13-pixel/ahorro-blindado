@@ -15,12 +15,20 @@
             --warning: #f59e0b;
             --border: #334155;
         }
+        .light-mode {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --accent: #0284c7;
+            --border: #cbd5e1;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 16px;
+            transition: background 0.3s, color 0.3s;
         }
         h1, h2 { text-align: center; color: var(--accent); }
         .card {
@@ -29,10 +37,11 @@
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
         button {
             background-color: var(--accent);
-            color: #0f172a;
+            color: #fff;
             border: none;
             padding: 10px 16px;
             border-radius: 8px;
@@ -54,52 +63,90 @@
         }
         .status-green { background-color: var(--green); }
         .status-red { background-color: var(--red); }
-        input, select, textarea {
+        input, select {
             width: 100%;
             padding: 10px;
             margin-top: 6px;
             margin-bottom: 12px;
             border-radius: 8px;
             border: 1px solid var(--border);
-            background: #0f172a;
-            color: white;
+            background: var(--bg-color);
+            color: var(--text-color);
             box-sizing: border-box;
         }
         .calc-box {
-            background: #0b0f19;
+            background: rgba(56, 189, 248, 0.1);
             padding: 12px;
             border-radius: 8px;
             margin-top: 10px;
             font-size: 14px;
-            color: #38bdf8;
+            color: var(--accent);
             border: 1px dashed var(--accent);
         }
         .info-metodo {
             font-size: 13px;
-            color: #94a3b8;
-            background: #0f172a;
+            color: var(--text-color);
+            background: rgba(148, 163, 184, 0.1);
             padding: 8px;
             border-radius: 6px;
             margin-bottom: 10px;
             border-left: 3px solid var(--accent);
+            opacity: 0.9;
+        }
+        /* Botón flotante de calculadora */
+        .float-calc {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: #fff;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 999;
+        }
+        /* Modal calculadora flotante */
+        #modalCalc {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            border: 2px solid var(--accent);
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            width: 280px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 14px; font-weight: bold;">☀️ / 🌙 Modo Pantalla</span>
+        <button onclick="toggleTheme()" style="width: auto; padding: 6px 12px; font-size: 12px;">Cambiar Día / Noche</button>
+    </div>
+
     <h1>🛡️ Ahorro Blindado</h1>
 
-    <!-- SECCIÓN: CONFIGURACIÓN CRIPTO (OPCIONAL) -->
+    <!-- CONFIGURACIÓN CRIPTO -->
     <div class="card">
         <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
-        <p style="font-size: 13px; color: #94a3b8;">Vincula una wallet (USDT/USDC en Polygon o Arbitrum) para tu ahorro serio:</p>
+        <p style="font-size: 13px; opacity: 0.8;">Vincula una wallet (USDT/USDC) para tu ahorro serio:</p>
         <label>Dirección o URL de la Wallet:</label>
         <input type="text" id="cryptoWallet" placeholder="Ej. 0xYourWalletAddress...">
         <button onclick="guardarWallet()" style="background:#6366f1; color:white;">Guardar Billetera</button>
         <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
     </div>
 
-    <!-- SECCIÓN: SELECCIÓN DE TIPO DE AHORRO -->
+    <!-- SELECCIÓN DE TIPO DE AHORRO -->
     <div class="card">
         <h2>🧮 Gestión y Creación de Ahorro</h2>
         
@@ -107,12 +154,10 @@
         <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
             <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
             <option value="sueldo">Ahorro por Porcentaje de Sueldo (50/30/20 o 70/20/10)</option>
-            <option value="variable">Ahorro Variable / Redondeo / Base Cero (Suma libre)</option>
+            <option value="variable">Ahorro Variable (Redondeo, Sobrante, Vuelta, Anti-Capricho)</option>
         </select>
 
-        <div id="infoExplicacion" class="info-metodo">
-            <!-- Aquí cambia la explicación según el plan -->
-        </div>
+        <div id="infoExplicacion" class="info-metodo"></div>
 
         <!-- BLOQUE 1: METAS DE COMPRA -->
         <div id="seccionMeta">
@@ -130,14 +175,8 @@
 
             <div id="bloqueFechas">
                 <div style="display: flex; gap: 10px;">
-                    <div style="flex:1;">
-                        <label>Fecha de Inicio:</label>
-                        <input type="date" id="fechaInicio">
-                    </div>
-                    <div style="flex:1;">
-                        <label>Fecha de Fin:</label>
-                        <input type="date" id="fechaFin">
-                    </div>
+                    <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
+                    <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
                 </div>
             </div>
 
@@ -148,8 +187,8 @@
 
             <label>Estrategia:</label>
             <select id="metaTechniqueMeta">
-                <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto - Ideal para TV u Ordenador)</option>
-                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado - Ideal para Coche)</option>
+                <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
+                <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado)</option>
             </select>
         </div>
 
@@ -160,21 +199,26 @@
 
             <label>Regla de Porcentajes:</label>
             <select id="metaTechniqueSueldo">
-                <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro neto)</option>
+                <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
                 <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
             </select>
         </div>
 
-        <!-- BLOQUE 3: AHORRO VARIABLE (REDONDEO / BASE CERO) -->
+        <!-- BLOQUE 3: AHORRO VARIABLE (REDONDEO / SOBRANTE / VUELTA) -->
         <div id="seccionVariable" style="display:none;">
             <label>Nombre del fondo variable:</label>
-            <input type="text" id="variableName" placeholder="Ej. Hucha Redondeo / Base Cero">
+            <input type="text" id="variableName" placeholder="Ej. Hucha de Redondeo / Sobrantes">
 
-            <label>Sistema Variable:</label>
+            <label>Especificación del Ahorro:</label>
             <select id="metaTechniqueVariable">
-                <option value="Hucha de Redondeo">Hucha de Redondeo (Acumulas céntimos de tus compras de tarjeta)</option>
-                <option value="Presupuesto Base Cero">Presupuesto Base Cero (Asignación manual de sobrantes diarios)</option>
+                <option value="Hucha de Redondeo">Hucha de Redondeo (Céntimos de tarjeta)</option>
+                <option value="Vuelta de la Compra">Vuelta de la Compra (Efectivo sobrante)</option>
+                <option value="Sobrante Diario">Sobrante Diario (Presupuesto Base Cero)</option>
+                <option value="Anti-Capricho">Anti-Capricho (Gasto cotidiano evitado)</option>
             </select>
+
+            <label>Monto inicial o aporte a registrar (€):</label>
+            <input type="number" step="0.01" id="variableMontoInicial" placeholder="Ej. 2.50">
         </div>
 
         <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Calcular / Preparar Plan</button>
@@ -187,13 +231,13 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: MIS METAS ACTIVAS -->
+    <!-- MIS METAS ACTIVAS -->
     <div class="card">
         <h2>Mis Metas Activas Programadas</h2>
         <div id="metasList">Cargando metas...</div>
     </div>
 
-    <!-- SECCIÓN: ANTI-CAPRICHOS -->
+    <!-- HUCHA ANTI-CAPRICHOS -->
     <div class="card">
         <h2>☕ Hucha Anti-Caprichos</h2>
         <label>Concepto (Café, Caña...):</label>
@@ -203,7 +247,7 @@
         <button class="btn-green" onclick="sumarAntiCapricho()">A sumar a la Meta Activa</button>
     </div>
 
-    <!-- SECCIÓN: REGLA DE LAS 48 HORAS -->
+    <!-- REGLA DE LAS 48 HORAS -->
     <div class="card">
         <h2>⏳ Filtro Anti-Impulsos (Regla 48h)</h2>
         <label>Producto deseado:</label>
@@ -214,16 +258,56 @@
         <div id="deseosList" style="margin-top: 12px;"></div>
     </div>
 
+    <!-- BOTÓN Y VENTANA FLOTANTE DE CALCULADORA -->
+    <div class="float-calc" onclick="toggleModalCalc()">🧮</div>
+    <div id="modalCalc">
+        <h3 style="margin-top:0; color:var(--accent);">Calculadora Rápida</h3>
+        <input type="text" id="calcDisplay" readonly style="background:#000; color:#0ff; text-align:right; font-size:18px;">
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
+            <button onclick="calcApp('7')">7</button><button onclick="calcApp('8')">8</button><button onclick="calcApp('9')">9</button><button onclick="calcApp('+')">+</button>
+            <button onclick="calcApp('4')">4</button><button onclick="calcApp('5')">5</button><button onclick="calcApp('6')">6</button><button onclick="calcApp('-')">-</button>
+            <button onclick="calcApp('1')">1</button><button onclick="calcApp('2')">2</button><button onclick="calcApp('3')">3</button><button onclick="calcApp('*')">*</button>
+            <button onclick="calcApp('0')">0</button><button onclick="calcApp('.')">.</button><button onclick="calcResult()">=</button><button onclick="calcApp('/')">/</button>
+        </div>
+        <button onclick="calcClear()" class="btn-red" style="margin-top:8px;">Limpiar</button>
+        <button onclick="toggleModalCalc()" style="background:#64748b; margin-top:4px;">Cerrar</button>
+    </div>
+
     <script>
         let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
         let wallet = localStorage.getItem('ahorro_wallet') || '';
+        let isLight = localStorage.getItem('ahorro_light') === 'true';
         let calculoTemporal = null;
+
+        if(isLight) document.body.classList.add('light-mode');
+
+        function toggleTheme() {
+            isLight = !isLight;
+            localStorage.setItem('ahorro_light', isLight);
+            if(isLight) document.body.classList.add('light-mode');
+            else document.body.classList.remove('light-mode');
+        }
+
+        function toggleModalCalc() {
+            const m = document.getElementById('modalCalc');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function calcApp(v) { document.getElementById('calcDisplay').value += v; }
+        function calcClear() { document.getElementById('calcDisplay').value = ''; }
+        function calcResult() {
+            try {
+                document.getElementById('calcDisplay').value = eval(document.getElementById('calcDisplay').value);
+            } catch(e) {
+                document.getElementById('calcDisplay').value = 'Error';
+            }
+        }
 
         const explicaciones = {
             meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo (como un ordenador o un coche). La app calcula el ritmo diario o el tiempo necesario para alcanzarlo.",
-            sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto debes apartar de tus ingresos netos mensuales según reglas fijas de finanzas personales (como el 20% de ahorro en la regla 50/30/20).",
-            variable: "💡 <b>Ahorro Variable (Redondeo / Base Cero):</b> No tiene cuotas fijas ni plazos estrictos. Funciona sumando libremente los céntimos o sobrantes que tú decidas registrar manualmente cada vez que ahorres."
+            sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto debes apartar de tus ingresos netos mensuales según reglas fijas de finanzas personales.",
+            variable: "💡 <b>Ahorro Variable:</b> Ideal para acumular la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible introduciendo el monto directamente."
         };
 
         function actualizarExplicacion() {
@@ -233,7 +317,7 @@
 
         if(wallet) {
             document.getElementById('cryptoWallet').value = wallet;
-            document.getElementById('walletStatus').innerText = 'Wallet vinculada: ' + wallet.substring(0, 15) + '...';
+            document.getElementById('walletStatus').innerText = 'Wallet vinculada.';
         }
 
         function guardarWallet() {
@@ -256,7 +340,6 @@
             const modo = document.getElementById('modoCalculo').value;
             document.getElementById('bloqueFechas').style.display = modo === 'fechas' ? 'block' : 'none';
             document.getElementById('bloqueCuota').style.display = modo === 'cuota' ? 'block' : 'none';
-            document.getElementById('resultadoCalculo').style.display = 'none';
         }
 
         function limpiarFormulario() {
@@ -264,9 +347,7 @@
             document.getElementById('metaAmount').value = '';
             document.getElementById('sueldoNeto').value = '';
             document.getElementById('variableName').value = '';
-            document.getElementById('fechaInicio').value = '';
-            document.getElementById('fechaFin').value = '';
-            document.getElementById('aporteMensual').value = '';
+            document.getElementById('variableMontoInicial').value = '';
             document.getElementById('resultadoCalculo').style.display = 'none';
             calculoTemporal = null;
             alert('Formulario limpiado.');
@@ -274,7 +355,7 @@
 
         function calcularPlan() {
             const tipo = document.getElementById('tipoCalculadora').value;
-            let name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable = false;
+            let name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable = false, montoInicial = 0;
 
             if(tipo === 'meta') {
                 name = document.getElementById('metaName').value;
@@ -283,91 +364,64 @@
                 const modo = document.getElementById('modoCalculo').value;
 
                 if(!name || isNaN(amount) || amount <= 0) {
-                    alert('Introduce el nombre de la meta y un importe objetivo válido.');
+                    alert('Introduce el nombre de la meta y un importe válido.');
                     return;
                 }
 
                 if(modo === 'fechas') {
                     inicio = document.getElementById('fechaInicio').value;
                     fin = document.getElementById('fechaFin').value;
-                    if(!inicio || !fin) {
-                        alert('Selecciona la fecha de inicio y de fin.');
-                        return;
-                    }
-                    const d1 = new Date(inicio);
-                    const d2 = new Date(fin);
+                    if(!inicio || !fin) { alert('Selecciona fechas.'); return; }
+                    const d1 = new Date(inicio), d2 = new Date(fin);
                     daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
-                    const diario = (amount / daysLeft).toFixed(2);
-                    const mensual = (amount / (daysLeft / 30)).toFixed(2);
-                    textoCalculo = `Meta de compra (${name}): <b>${diario}€/día</b> o <b>${mensual}€/mes</b> necesarios.`;
+                    textoCalculo = `Meta (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
-                    if(isNaN(aporte) || aporte <= 0) {
-                        alert('Introduce una cantidad válida que puedas pagar por mes.');
-                        return;
-                    }
+                    if(isNaN(aporte) || aporte <= 0) { alert('Introduce aporte mensual.'); return; }
                     inicio = new Date().toISOString().split('T')[0];
-                    const mesesNecesarios = amount / aporte;
-                    daysLeft = Math.ceil(mesesNecesarios * 30);
-                    const fechaFinalObj = new Date();
-                    fechaFinalObj.setDate(fechaFinalObj.getDate() + daysLeft);
-                    fin = fechaFinalObj.toISOString().split('T')[0];
-                    textoCalculo = `Meta de compra (${name}): Pagando ${aporte}€/mes tardarás <b>${mesesNecesarios.toFixed(1)} meses</b>.`;
+                    const meses = amount / aporte;
+                    daysLeft = Math.ceil(meses * 30);
+                    const f = new Date(); f.setDate(f.getDate() + daysLeft);
+                    fin = f.toISOString().split('T')[0];
+                    textoCalculo = `Meta (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
                 technique = document.getElementById('metaTechniqueSueldo').value;
-
-                if(isNaN(sueldo) || sueldo <= 0) {
-                    alert('Introduce tus ingresos netos mensuales.');
-                    return;
-                }
+                if(isNaN(sueldo) || sueldo <= 0) { alert('Introduce sueldo.'); return; }
 
                 name = `Ahorro por Sueldo (${technique})`;
-                let ahorroMensual = 0;
-                if(technique === 'Regla 50/30/20') {
-                    ahorroMensual = sueldo * 0.20;
-                    textoCalculo = `De tu sueldo de ${sueldo}€, tu <b>20% de ahorro mensual es de ${ahorroMensual.toFixed(2)}€</b>.`;
-                } else {
-                    ahorroMensual = (sueldo * 0.20) + (sueldo * 0.10);
-                    textoCalculo = `De tu sueldo de ${sueldo}€, destinas un <b>30% total (${ahorroMensual.toFixed(2)}€/mes)</b> a ahorro e inversión.`;
-                }
-
-                amount = ahorroMensual * 12;
+                let ahorro = technique === 'Regla 50/30/20' ? sueldo * 0.20 : sueldo * 0.30;
+                amount = ahorro * 12;
                 inicio = new Date().toISOString().split('T')[0];
-                const fechaFinalObj = new Date();
-                fechaFinalObj.setFullYear(fechaFinalObj.getFullYear() + 1);
-                fin = fechaFinalObj.toISOString().split('T')[0];
+                const f = new Date(); f.setFullYear(f.getFullYear() + 1);
+                fin = f.toISOString().split('T')[0];
                 daysLeft = 365;
+                textoCalculo = `Ahorro mensual por sueldo: <b>${ahorro.toFixed(2)}€/mes</b>.`;
             } else {
                 name = document.getElementById('variableName').value;
                 technique = document.getElementById('metaTechniqueVariable').value;
+                montoInicial = parseFloat(document.getElementById('variableMontoInicial').value) || 0;
 
-                if(!name) {
-                    alert('Introduce un nombre para este fondo variable.');
-                    return;
-                }
+                if(!name) { alert('Introduce nombre del fondo variable.'); return; }
 
-                amount = 999999; // Sin límite fijo obligatorio
+                amount = 999999;
                 inicio = new Date().toISOString().split('T')[0];
                 fin = 'Indefinido';
                 daysLeft = 365;
                 esVariable = true;
-                textoCalculo = `Fondo variable (${technique}): Acumulación libre según tus aportes manuales o céntimos.`;
+                textoCalculo = `Fondo variable (${technique}): Acumulación flexible.`;
             }
 
-            calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable };
+            calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable, montoInicial };
 
             const box = document.getElementById('resultadoCalculo');
             box.style.display = 'block';
-            box.innerHTML = `📌 <b>Resultado del cálculo / configuración:</b><br>${textoCalculo}`;
+            box.innerHTML = `📌 <b>Resultado:</b><br>${textoCalculo}`;
         }
 
         function comenzarMeta() {
-            if(!calculoTemporal) {
-                alert('Por favor, pulsa primero el botón de "Calcular / Preparar Plan".');
-                return;
-            }
+            if(!calculoTemporal) { alert('Calcula el plan primero.'); return; }
 
             const nuevaMeta = {
                 id: Date.now(),
@@ -377,7 +431,7 @@
                 inicio: calculoTemporal.inicio,
                 fin: calculoTemporal.fin,
                 textoCalculo: calculoTemporal.textoCalculo,
-                saved: 0,
+                saved: calculoTemporal.montoInicial || 0,
                 daysLeft: calculoTemporal.daysLeft,
                 status: 'red',
                 esVariable: calculoTemporal.esVariable
@@ -386,42 +440,32 @@
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
             limpiarFormulario();
-            alert('¡Meta programada e iniciada con éxito!');
+            alert('¡Meta creada con éxito!');
         }
 
         function sumarAporteLibre(id) {
-            const extra = prompt('¿Cuánto deseas sumar a este fondo variable? (€):');
+            const extra = prompt('¿Cuánto deseas sumar (Sobrante, Vuelta, Anti-capricho)? (€):');
             const monto = parseFloat(extra);
             if(!isNaN(monto) && monto > 0) {
                 const meta = metas.find(m => m.id === id);
                 if(meta) {
                     meta.saved += monto;
-                    meta.status = 'green';
                     guardarYRenderizarMetas();
                     alert(`¡Sumados ${monto}€ correctamente!`);
                 }
-            } else {
-                alert('Importe no válido.');
-            }
+            } else { alert('Importe no válido.'); }
         }
 
         function sumarAntiCapricho() {
-            if(metas.length === 0) {
-                alert('Crea una meta primero.');
-                return;
-            }
+            if(metas.length === 0) { alert('Crea una meta primero.'); return; }
             const concepto = document.getElementById('caprichoConcepto').value || 'Gasto evitado';
             const monto = parseFloat(document.getElementById('caprichoMonto').value);
-
-            if(isNaN(monto) || monto <= 0) {
-                alert('Introduce un importe válido.');
-                return;
-            }
+            if(isNaN(monto) || monto <= 0) { alert('Introduce importe.'); return; }
 
             metas[0].saved += monto;
             metas[0].status = 'green';
             guardarYRenderizarMetas();
-            alert(`¡Anotado! ${monto}€ de "${concepto}" sumados.`);
+            alert(`¡Anotado! ${monto}€ (${concepto}) sumados.`);
             document.getElementById('caprichoConcepto').value = '';
             document.getElementById('caprichoMonto').value = '';
         }
@@ -429,12 +473,12 @@
         function agregarDeseo() {
             const nombre = document.getElementById('deseoNombre').value;
             const precio = document.getElementById('deseoPrecio').value;
-            if(!nombre || !precio) return alert('Rellena los datos del capricho.');
+            if(!nombre || !precio) return alert('Rellena datos.');
 
-            deseos.push({ id: Date.now(), nombre, precio, horas: 48 });
+            deseos.push({ id: Date.now(), nombre, precio });
             localStorage.setItem('ahorro_deseos', JSON.stringify(deseos));
             renderDeseos();
-            alert('Capricho congelado en periodo de reflexión de 48 horas.');
+            alert('Capricho congelado (48h).');
         }
 
         function guardarYRenderizarMetas() {
@@ -444,25 +488,17 @@
 
         function renderMetas() {
             const container = document.getElementById('metasList');
-            if(metas.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas.</p>';
-                return;
-            }
+            if(metas.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay metas activas.</p>'; return; }
             container.innerHTML = '';
             metas.forEach(meta => {
-                let infoProgreso = '';
-                let botonesExtra = '';
-
+                let infoProgreso = '', botonesExtra = '';
                 if(meta.esVariable) {
-                    infoProgreso = `Acumulado actual: <b>${meta.saved.toFixed(2)}€</b> (Sin límite fijo)`;
-                    botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green" style="margin-top:4px;">➕ Sumar Aporte Manual / Redondeo</button>`;
+                    infoProgreso = `Acumulado actual: <b>${meta.saved.toFixed(2)}€</b>`;
+                    botonesExtra = `<button onclick="sumarAporteLibre(${meta.id})" class="btn-green">➕ Registrar Sobrante / Vuelta / Anti-Capricho</button>`;
                 } else {
                     const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
                     infoProgreso = `Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)`;
-                    botonesExtra = `
-                        Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
-                        <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
-                    `;
+                    botonesExtra = `Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br><button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>`;
                 }
 
                 container.innerHTML += `
@@ -471,20 +507,16 @@
                         Estrategia: <i>${meta.technique}</i><br>
                         🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
                         ${infoProgreso}<br>
-                        
-                        <div class="calc-box">
-                            📊 <b>${meta.textoCalculo}</b>
-                        </div>
-
+                        <div class="calc-box">📊 <b>${meta.textoCalculo}</b></div>
                         ${botonesExtra}
-                        <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">Eliminar / Cancelar Meta</button>
+                        <button onclick="eliminarMeta(${meta.id})" class="btn-red" style="margin-top:4px;">Eliminar Meta</button>
                     </div>
                 `;
             });
         }
 
         function eliminarMeta(id) {
-            if(confirm('¿Seguro que deseas eliminar esta meta?')) {
+            if(confirm('¿Eliminar meta?')) {
                 metas = metas.filter(m => m.id !== id);
                 guardarYRenderizarMetas();
             }
@@ -492,23 +524,16 @@
 
         function renderDeseos() {
             const container = document.getElementById('deseosList');
-            if(deseos.length === 0) {
-                container.innerHTML = '<span style="color:#64748b; font-size:13px;">No hay impulsos congelados.</span>';
-                return;
-            }
+            if(deseos.length === 0) { container.innerHTML = '<span style="font-size:13px; opacity:0.6;">No hay impulsos congelados.</span>'; return; }
             container.innerHTML = '';
             deseos.forEach(d => {
-                container.innerHTML += `<div style="font-size:13px; background:#0f172a; padding:6px; border-radius:6px; margin-top:4px;">⏳ <b>${d.nombre}</b> (${d.precio}€) - Enfríando deseos (48h)</div>`;
+                container.innerHTML += `<div style="font-size:13px; background:rgba(0,0,0,0.1); padding:6px; border-radius:6px; margin-top:4px;">⏳ <b>${d.nombre}</b> (${d.precio}€) - 48h</div>`;
             });
         }
 
         function validarDia(id) {
             const meta = metas.find(m => m.id === id);
-            if(meta) {
-                meta.status = 'green';
-                guardarYRenderizarMetas();
-                alert('¡Día validado en verde!');
-            }
+            if(meta) { meta.status = 'green'; guardarYRenderizarMetas(); alert('¡Día validado!'); }
         }
 
         actualizarExplicacion();
