@@ -474,7 +474,12 @@
                         return;
                     }
 
-                    textoCalculo = `Meta (${name}): <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
+                    // Cálculo detallado en meses y días
+                    const mesesExactos = Math.floor(daysLeft / 30);
+                    const diasSobrantes = daysLeft % 30;
+                    let desgloseTiempo = mesesExactos > 0 ? `${mesesExactos} mes(es) y ${diasSobrantes} día(s)` : `${daysLeft} día(s)`;
+
+                    textoCalculo = `Meta (${name}) - Plazo: <b>${desegloseTiempo || desgloseTiempo}</b> (${daysLeft} días total):<br>💰 <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
                 } else {
                     const aporte = parseFloat(document.getElementById('aporteMensual').value);
                     if(isNaN(aporte) || aporte <= 0) { alert('Introduce una cuota mensual válida.'); return; }
@@ -483,7 +488,12 @@
                     daysLeft = Math.ceil(meses * 30);
                     const f = new Date(); f.setDate(f.getDate() + daysLeft);
                     fin = f.toISOString().split('T')[0];
-                    textoCalculo = `Meta (${name}): Pagando ${aporte}€/mes tardarás <b>${meses.toFixed(1)} meses</b>.`;
+                    
+                    const mesesExactos = Math.floor(daysLeft / 30);
+                    const diasSobrantes = daysLeft % 30;
+                    let desgloseTiempo = mesesExactos > 0 ? `${mesesExactos} mes(es) y ${diasSobrantes} día(s)` : `${daysLeft} día(s)`;
+
+                    textoCalculo = `Meta (${name}) - Plazo estimado: <b>${desegloseTiempo}</b> (${daysLeft} días):<br>💰 Pagando ${aporte}€/mes.`;
                 }
             } else if(tipo === 'sueldo') {
                 const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
@@ -497,7 +507,7 @@
                 const f = new Date(); f.setFullYear(f.getFullYear() + 1);
                 fin = f.toISOString().split('T')[0];
                 daysLeft = 365;
-                textoCalculo = `Ahorro mensual por sueldo: <b>${ahorro.toFixed(2)}€/mes</b>.`;
+                textoCalculo = `Ahorro mensual por sueldo (1 año): <b>${ahorro.toFixed(2)}€/mes</b>.`;
             } else {
                 name = document.getElementById('variableName').value;
                 technique = document.getElementById('metaTechniqueVariable').value;
@@ -510,7 +520,7 @@
                 fin = 'Indefinido';
                 daysLeft = 365;
                 esVariable = true;
-                textoCalculo = `Fondo variable (${technique}): Acumulación flexible.`;
+                textoCalculo = `Fondo variable (${technique}): Acumulación flexible indefinida.`;
             }
 
             calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable, montoInicial };
@@ -664,8 +674,10 @@
                     if(meta.pausada) {
                         cuentaAtrasTexto = `⏸️ <b>Meta pausada</b>`;
                     } else if(diffDays > 0) {
-                        const meses = (diffDays / 30).toFixed(1);
-                        cuentaAtrasTexto = `${meta.bloqueada ? '🔒 <b>Bóveda Sellada</b>' : '⏳'} - Quedan <b>${diffDays} días</b> (~${meses} meses)`;
+                        const meses = Math.floor(diffDays / 30);
+                        const dias = diffDays % 30;
+                        const desglose = meses > 0 ? `${meses} mes(es) y ${dias} día(s)` : `${diffDays} día(s)`;
+                        cuentaAtrasTexto = `${meta.bloqueada ? '🔒 <b>Bóveda Sellada</b>' : '⏳'} - Quedan <b>${desglose}</b>`;
                     } else {
                         cuentaAtrasTexto = `🔓 <b>¡Plazo cumplido! Bóveda abierta.</b>`;
                     }
