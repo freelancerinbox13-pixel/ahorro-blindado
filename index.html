@@ -67,11 +67,12 @@
         }
         .calc-box {
             background: #0b0f19;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
-            margin-top: 8px;
-            font-size: 13px;
+            margin-top: 10px;
+            font-size: 14px;
             color: #38bdf8;
+            border: 1px dashed var(--accent);
         }
     </style>
 </head>
@@ -89,14 +90,14 @@
         <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
     </div>
 
-    <!-- SECCIÓN: NUEVA META PROGRAMABLE -->
+    <!-- SECCIÓN: NUEVA META Y CALCULADORA -->
     <div class="card">
-        <h2>Crear y Programar Meta</h2>
+        <h2>🧮 Calculadora y Programación de Meta</h2>
         <label>¿Qué quieres comprar? (Ej. Anillo, Coche, TV)</label>
         <input type="text" id="metaName" placeholder="Nombre de la meta">
         
         <label>Importe objetivo (€ / USDT)</label>
-        <input type="number" id="metaAmount" placeholder="200">
+        <input type="number" id="metaAmount" placeholder="100">
 
         <label>Modo de Cálculo:</label>
         <select id="modoCalculo" onchange="cambiarModo()">
@@ -119,7 +120,7 @@
 
         <div id="bloqueCuota" style="display:none;">
             <label>¿Cuánto puedes aportar por mes (€)?</label>
-            <input type="number" id="aporteMensual" placeholder="Ej. 50">
+            <input type="number" id="aporteMensual" placeholder="Ej. 10">
         </div>
 
         <label>Metodología / Estrategia:</label>
@@ -132,7 +133,13 @@
             <option value="Hucha de Redondeo">Hucha de Redondeo</option>
         </select>
 
-        <div style="display: flex; gap: 10px; margin-top: 8px;">
+        <button class="btn-warning" onclick="calcularPlan()">🔍 Calcular Plan de Ahorro</button>
+
+        <div id="resultadoCalculo" class="calc-box" style="display:none;">
+            <!-- Aquí aparecerá el resultado del cálculo -->
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
             <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
             <button class="btn-red" style="flex:1;" onclick="limpiarFormulario()">Cancelar</button>
         </div>
@@ -169,6 +176,7 @@
         let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
         let wallet = localStorage.getItem('ahorro_wallet') || '';
+        let calculoTemporal = null;
 
         if(wallet) {
             document.getElementById('cryptoWallet').value = wallet;
@@ -191,6 +199,7 @@
                 document.getElementById('bloqueFechas').style.display = 'none';
                 document.getElementById('bloqueCuota').style.display = 'block';
             }
+            document.getElementById('resultadoCalculo').style.display = 'none';
         }
 
         function limpiarFormulario() {
@@ -199,17 +208,18 @@
             document.getElementById('fechaInicio').value = '';
             document.getElementById('fechaFin').value = '';
             document.getElementById('aporteMensual').value = '';
-            alert('Formulario cancelado.');
+            document.getElementById('resultadoCalculo').style.display = 'none';
+            calculoTemporal = null;
+            alert('Formulario limpiado.');
         }
 
-        function comenzarMeta() {
+        function calcularPlan() {
             const name = document.getElementById('metaName').value;
             const amount = parseFloat(document.getElementById('metaAmount').value);
             const modo = document.getElementById('modoCalculo').value;
-            const technique = document.getElementById('metaTechnique').value;
 
             if(!name || isNaN(amount) || amount <= 0) {
-                alert('Rellena el nombre y el importe objetivo.');
+                alert('Introduce primero el nombre de la meta y un importe objetivo válido.');
                 return;
             }
 
@@ -227,7 +237,7 @@
                 daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
                 const diario = (amount / daysLeft).toFixed(2);
                 const mensual = (amount / (daysLeft / 30)).toFixed(2);
-                textoCalculo = `Ritmo necesario: ${diario}€/día o ${mensual}€/mes`;
+                textoCalculo = `Ritmo necesario: <b>${diario}€/día</b> o <b>${mensual}€/mes</b>`;
             } else {
                 const aporte = parseFloat(document.getElementById('aporteMensual').value);
                 if(isNaN(aporte) || aporte <= 0) {
@@ -242,19 +252,36 @@
                 fechaFinalObj.setDate(fechaFinalObj.getDate() + daysLeft);
                 fin = fechaFinalObj.toISOString().split('T')[0];
                 
-                textoCalculo = `Pagando ${aporte}€/mes tardarás aprox. ${mesesNecesarios.toFixed(1)} meses`;
+                textoCalculo = `Pagando ${aporte}€/mes tardarás aprox. <b>${mesesNecesarios.toFixed(1)} meses</b> (Fecha estimada fin: ${fin})`;
             }
+
+            calculoTemporal = { inicio, fin, daysLeft, textoCalculo };
+
+            const box = document.getElementById('resultadoCalculo');
+            box.style.display = 'block';
+            box.innerHTML = `📌 <b>Resultado del cálculo para "${name}":</b><br>${textoCalculo}`;
+        }
+
+        function comenzarMeta() {
+            if(!calculoTemporal) {
+                alert('Por favor, pulsa primero el botón de "Calcular Plan de Ahorro".');
+                return;
+            }
+
+            const name = document.getElementById('metaName').value;
+            const amount = parseFloat(document.getElementById('metaAmount').value);
+            const technique = document.getElementById('metaTechnique').value;
 
             const nuevaMeta = {
                 id: Date.now(),
                 name,
                 amount,
                 technique,
-                inicio,
-                fin,
-                textoCalculo,
+                inicio: calculoTemporal.inicio,
+                fin: calculoTemporal.fin,
+                textoCalculo: calculoTemporal.textoCalculo,
                 saved: 0,
-                daysLeft,
+                daysLeft: calculoTemporal.daysLeft,
                 status: 'red'
             };
 
