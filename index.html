@@ -82,9 +82,9 @@
     <!-- SECCIÓN: CONFIGURACIÓN CRIPTO (OPCIONAL) -->
     <div class="card">
         <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
-        <p style="font-size: 13px; color: #94a3b8;">Vincula una wallet (USDT/USDC en Polygon o Arbitrum) para desviar tu ahorro serio a largo plazo:</p>
+        <p style="font-size: 13px; color: #94a3b8;">Vincula una wallet (USDT/USDC en Polygon o Arbitrum) para tu ahorro serio:</p>
         <label>Dirección o URL de la Wallet:</label>
-        <input type="text" id="cryptoWallet" placeholder="Ej. 0xYourWalletAddress... o polygon:...">
+        <input type="text" id="cryptoWallet" placeholder="Ej. 0xYourWalletAddress...">
         <button onclick="guardarWallet()" style="background:#6366f1; color:white;">Guardar Billetera</button>
         <div id="walletStatus" style="font-size: 12px; color: var(--green); margin-top: 6px;"></div>
     </div>
@@ -92,35 +92,45 @@
     <!-- SECCIÓN: NUEVA META PROGRAMABLE -->
     <div class="card">
         <h2>Crear y Programar Meta</h2>
-        <label>¿Qué quieres comprar? (Ej. Coche, Ordenador, TV)</label>
+        <label>¿Qué quieres comprar? (Ej. Anillo, Coche, TV)</label>
         <input type="text" id="metaName" placeholder="Nombre de la meta">
         
         <label>Importe objetivo (€ / USDT)</label>
-        <input type="number" id="metaAmount" placeholder="1200">
+        <input type="number" id="metaAmount" placeholder="200">
+
+        <label>Modo de Cálculo:</label>
+        <select id="modoCalculo" onchange="cambiarModo()">
+            <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
+            <option value="cuota">Sé cuánto puedo pagar (Calcular tiempo necesario)</option>
+        </select>
+
+        <div id="bloqueFechas">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label>Fecha de Inicio:</label>
+                    <input type="date" id="fechaInicio">
+                </div>
+                <div style="flex:1;">
+                    <label>Fecha de Fin:</label>
+                    <input type="date" id="fechaFin">
+                </div>
+            </div>
+        </div>
+
+        <div id="bloqueCuota" style="display:none;">
+            <label>¿Cuánto puedes aportar por mes (€)?</label>
+            <input type="number" id="aporteMensual" placeholder="Ej. 50">
+        </div>
 
         <label>Metodología / Estrategia:</label>
         <select id="metaTechnique">
-            <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
-            <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo Coche)</option>
+            <option value="Corto Plazo">Corto Plazo (Cuota fija / Reto)</option>
+            <option value="Medio/Largo Plazo">Medio/Largo Plazo (Fondo dedicado)</option>
             <option value="Regla 50/30/20">Regla 50 / 30 / 20</option>
             <option value="Regla 70/20/10">Regla 70 / 20 / 10</option>
             <option value="Presupuesto Base Cero">Presupuesto Base Cero</option>
             <option value="Hucha de Redondeo">Hucha de Redondeo</option>
         </select>
-
-        <div style="display: flex; gap: 10px;">
-            <div style="flex:1;">
-                <label>Fecha de Inicio:</label>
-                <input type="date" id="fechaInicio">
-            </div>
-            <div style="flex:1;">
-                <label>Fecha de Fin (Bloqueo):</label>
-                <input type="date" id="fechaFin">
-            </div>
-        </div>
-
-        <label>Cuota o Porcentaje programado:</label>
-        <input type="text" id="metaCuota" placeholder="Ej. 50€ al mes o 20%">
 
         <div style="display: flex; gap: 10px; margin-top: 8px;">
             <button class="btn-green" style="flex:1;" onclick="comenzarMeta()">Comenzar Meta</button>
@@ -168,8 +178,19 @@
         function guardarWallet() {
             wallet = document.getElementById('cryptoWallet').value;
             localStorage.setItem('ahorro_wallet', wallet);
-            document.getElementById('walletStatus').innerText = wallet ? 'Wallet vinculada correctamente.' : '';
-            alert('Configuración de billetera guardada.');
+            document.getElementById('walletStatus').innerText = wallet ? 'Wallet vinculada.' : '';
+            alert('Billetera guardada.');
+        }
+
+        function cambiarModo() {
+            const modo = document.getElementById('modoCalculo').value;
+            if(modo === 'fechas') {
+                document.getElementById('bloqueFechas').style.display = 'block';
+                document.getElementById('bloqueCuota').style.display = 'none';
+            } else {
+                document.getElementById('bloqueFechas').style.display = 'none';
+                document.getElementById('bloqueCuota').style.display = 'block';
+            }
         }
 
         function limpiarFormulario() {
@@ -177,28 +198,52 @@
             document.getElementById('metaAmount').value = '';
             document.getElementById('fechaInicio').value = '';
             document.getElementById('fechaFin').value = '';
-            document.getElementById('metaCuota').value = '';
+            document.getElementById('aporteMensual').value = '';
             alert('Formulario cancelado.');
         }
 
         function comenzarMeta() {
             const name = document.getElementById('metaName').value;
             const amount = parseFloat(document.getElementById('metaAmount').value);
+            const modo = document.getElementById('modoCalculo').value;
             const technique = document.getElementById('metaTechnique').value;
-            const inicio = document.getElementById('fechaInicio').value;
-            const fin = document.getElementById('fechaFin').value;
-            const cuota = document.getElementById('metaCuota').value;
 
-            if(!name || isNaN(amount) || amount <= 0 || !inicio || !fin) {
-                alert('Rellena el nombre, importe, fecha de inicio y fecha de fin.');
+            if(!name || isNaN(amount) || amount <= 0) {
+                alert('Rellena el nombre y el importe objetivo.');
                 return;
             }
 
-            // Calcular días totales entre inicio y fin
-            const d1 = new Date(inicio);
-            const d2 = new Date(fin);
-            const diffTime = Math.abs(d2 - d1);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+            let inicio, fin, daysLeft, textoCalculo;
+
+            if(modo === 'fechas') {
+                inicio = document.getElementById('fechaInicio').value;
+                fin = document.getElementById('fechaFin').value;
+                if(!inicio || !fin) {
+                    alert('Selecciona la fecha de inicio y de fin.');
+                    return;
+                }
+                const d1 = new Date(inicio);
+                const d2 = new Date(fin);
+                daysLeft = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+                const diario = (amount / daysLeft).toFixed(2);
+                const mensual = (amount / (daysLeft / 30)).toFixed(2);
+                textoCalculo = `Ritmo necesario: ${diario}€/día o ${mensual}€/mes`;
+            } else {
+                const aporte = parseFloat(document.getElementById('aporteMensual').value);
+                if(isNaN(aporte) || aporte <= 0) {
+                    alert('Introduce una cantidad válida que puedas pagar por mes.');
+                    return;
+                }
+                inicio = new Date().toISOString().split('T')[0];
+                const mesesNecesarios = amount / aporte;
+                daysLeft = Math.ceil(mesesNecesarios * 30);
+                
+                const fechaFinalObj = new Date();
+                fechaFinalObj.setDate(fechaFinalObj.getDate() + daysLeft);
+                fin = fechaFinalObj.toISOString().split('T')[0];
+                
+                textoCalculo = `Pagando ${aporte}€/mes tardarás aprox. ${mesesNecesarios.toFixed(1)} meses`;
+            }
 
             const nuevaMeta = {
                 id: Date.now(),
@@ -207,21 +252,21 @@
                 technique,
                 inicio,
                 fin,
-                cuota: cuota || 'Automática',
+                textoCalculo,
                 saved: 0,
-                daysLeft: diffDays,
+                daysLeft,
                 status: 'red'
             };
 
             metas.push(nuevaMeta);
             guardarYRenderizarMetas();
             limpiarFormulario();
-            alert('¡Meta programada, iniciada y blindada con éxito!');
+            alert('¡Meta programada e iniciada con éxito!');
         }
 
         function sumarAntiCapricho() {
             if(metas.length === 0) {
-                alert('Crea y comienza una meta primero.');
+                alert('Crea una meta primero.');
                 return;
             }
             const concepto = document.getElementById('caprichoConcepto').value || 'Gasto evitado';
@@ -259,26 +304,22 @@
         function renderMetas() {
             const container = document.getElementById('metasList');
             if(metas.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas programadas.</p>';
+                container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas.</p>';
                 return;
             }
             container.innerHTML = '';
             metas.forEach(meta => {
                 const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
-                const restante = Math.max(0, meta.amount - meta.saved);
-                const dias = meta.daysLeft > 0 ? meta.daysLeft : 1;
-                const ahorroDiario = (restante / dias).toFixed(2);
 
                 container.innerHTML += `
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>🎯 ${meta.name}</strong><br>
                         Estrategia: <i>${meta.technique}</i><br>
-                        🗓️ Del ${meta.inicio} al ${meta.fin} (${meta.daysLeft} días)<br>
-                        💰 Cuota programada: <b>${meta.cuota}</b><br>
+                        🗓️ Plazo: ${meta.inicio} al ${meta.fin}<br>
                         Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)<br>
                         
                         <div class="calc-box">
-                            📊 Ritmo diario necesario: <b>${ahorroDiario} € / día</b>
+                            📊 <b>${meta.textoCalculo}</b>
                         </div>
 
                         Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
@@ -290,7 +331,7 @@
         }
 
         function eliminarMeta(id) {
-            if(confirm('¿Seguro que deseas cancelar y eliminar esta meta?')) {
+            if(confirm('¿Seguro que deseas eliminar esta meta?')) {
                 metas = metas.filter(m => m.id !== id);
                 guardarYRenderizarMetas();
             }
