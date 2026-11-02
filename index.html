@@ -12,6 +12,7 @@
             --accent: #38bdf8;
             --green: #22c55e;
             --red: #ef4444;
+            --warning: #f59e0b;
             --border: #334155;
         }
         body {
@@ -41,9 +42,8 @@
             margin-top: 8px;
         }
         button:active { opacity: 0.8; }
-        .flex { display: flex; gap: 8px; }
         .btn-green { background-color: var(--green); color: white; }
-        .btn-red { background-color: var(--red); color: white; }
+        .btn-warning { background-color: var(--warning); color: #0f172a; }
         .status-box {
             display: inline-block;
             width: 20px;
@@ -73,17 +73,20 @@
     <!-- SECCIÓN: NUEVA META -->
     <div class="card">
         <h2>Crear Meta de Ahorro</h2>
-        <label>¿Qué quieres comprar?</label>
-        <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche, Televisor...">
+        <label>¿Qué quieres comprar? (Ej. Ordenador, Coche, Televisor)</label>
+        <input type="text" id="metaName" placeholder="Nombre de la meta">
         
         <label>Importe objetivo (€)</label>
         <input type="number" id="metaAmount" placeholder="1200">
 
-        <label>Técnica de Ahorro:</label>
+        <label>Metodología / Estrategia:</label>
         <select id="metaTechnique">
-            <option value="503020">Porcentajes (50/30/20)</option>
-            <option value="reto52">Reto Semanal / 52 Semanas</option>
-            <option value="antistress">Micro-sacrificios (Cafés/Cañas)</option>
+            <option value="Corto Plazo (Cuota fija / Reto)">Corto Plazo (Ordenador / TV - Cuota fija o Reto)</option>
+            <option value="Medio/Largo Plazo (Fondo 50/30/20)">Medio/Largo Plazo (Coche - Fondo dedicado)</option>
+            <option value="Regla 50/30/20">Regla 50 / 30 / 20 (General)</option>
+            <option value="Regla 70/20/10">Regla 70 / 20 / 10 (Vida / Ahorro / Inversión)</option>
+            <option value="Presupuesto Base Cero">Presupuesto Base Cero</option>
+            <option value="Hucha de Redondeo">Hucha de Redondeo por Tarjeta</option>
         </select>
 
         <label>Días de bloqueo (Plazo límite):</label>
@@ -98,19 +101,32 @@
         <div id="metasList">Cargando metas...</div>
     </div>
 
-    <!-- SECCIÓN: ANTI-CAPRICHOS DIARIOS -->
+    <!-- SECCIÓN: ANTI-CAPRICHOS PERSONALIZABLES -->
     <div class="card">
         <h2>☕ Hucha Anti-Caprichos</h2>
-        <p style="font-size: 14px; color: #94a3b8;">Suma lo que te has ahorrado hoy evitando pequeños gastos:</p>
-        <div class="flex">
-            <button class="btn-green" onclick="sumarAhorro(1.5)">Café (1.5€)</button>
-            <button class="btn-green" onclick="sumarAhorro(2.5)">Caña (2.5€)</button>
-            <button class="btn-green" onclick="sumarAhorro(5.0)">Taxi (5€)</button>
-        </div>
+        <p style="font-size: 14px; color: #94a3b8;">Registra lo ahorrado al evitar pequeños gastos diarios:</p>
+        <label>Concepto (Café, Caña, Snack...):</label>
+        <input type="text" id="caprichoConcepto" placeholder="Ej. Café evitado">
+        <label>Importe ahorrado (€):</label>
+        <input type="number" step="0.01" id="caprichoMonto" placeholder="1.50">
+        <button class="btn-green" onclick="sumarAntiCapricho()">A sumar a la Meta Activa</button>
+    </div>
+
+    <!-- SECCIÓN: REGLA DE LAS 48 HORAS (PSICOLÓGICO) -->
+    <div class="card">
+        <h2>⏳ Filtro Anti-Impulsos (Regla 48h)</h2>
+        <p style="font-size: 14px; color: #94a3b8;">Apunta un capricho tentador y congélalo 48 horas:</p>
+        <label>Producto deseado:</label>
+        <input type="text" id=" deseoNombre" placeholder="Ej. Zapatillas nuevas">
+        <label>Precio (€):</label>
+        <input type="number" id="deseoPrecio" placeholder="80">
+        <button class="btn-warning" onclick="agregarDeseo()">Congelar Capricho (48h)</button>
+        <div id="deseosList" style="margin-top: 12px;"></div>
     </div>
 
     <script>
         let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
+        let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
 
         function crearMeta() {
             const name = document.getElementById('metaName').value;
@@ -119,7 +135,7 @@
             const days = document.getElementById('metaDays').value;
 
             if(!name || !amount) {
-                alert('Por favor completa los campos principales');
+                alert('Rellena el nombre y el importe objetivo.');
                 return;
             }
 
@@ -130,28 +146,47 @@
                 technique,
                 saved: 0,
                 daysLeft: parseInt(days) || 30,
-                checkedToday: false,
-                status: 'red' // Empieza en rojo hasta que se valide
+                status: 'red'
             };
 
             metas.push(nuevaMeta);
-            guardarYRenderizar();
-            alert('¡Meta creada y blindada con éxito!');
+            guardarYRenderizarMetas();
+            alert('¡Meta creada y blindada!');
         }
 
-        function sumarAhorro(cuanto) {
+        function sumarAntiCapricho() {
             if(metas.length === 0) {
-                alert('Primero crea una meta arriba.');
+                alert('Crea una meta primero.');
                 return;
             }
-            metas[0].saved += cuanto;
-            metas[0].checkedToday = true;
+            const concepto = document.getElementById('caprichoConcepto').value || 'Gasto evitado';
+            const monto = parseFloat(document.getElementById('caprichoMonto').value);
+
+            if(isNaN(monto) || monto <= 0) {
+                alert('Introduce un importe válido.');
+                return;
+            }
+
+            metas[0].saved += monto;
             metas[0].status = 'green';
-            guardarYRenderizar();
-            alert(`¡Bien hecho! Has sumado ${cuanto}€ a tu meta.`);
+            guardarYRenderizarMetas();
+            alert(`¡Anotado! ${monto}€ de "${concepto}" sumados a tu meta.`);
+            document.getElementById('caprichoConcepto').value = '';
+            document.getElementById('caprichoMonto').value = '';
         }
 
-        function guardarYRenderizar() {
+        function agregarDeseo() {
+            const nombre = document.getElementById('deseoNombre').value;
+            const precio = document.getElementById('deseoPrecio').value;
+            if(!nombre || !precio) return alert('Rellena los datos del capricho.');
+
+            deseos.push({ id: Date.now(), nombre, precio, horas: 48 });
+            localStorage.setItem('ahorro_deseos', JSON.stringify(deseos));
+            renderDeseos();
+            alert('Capricho congelado en periodo de reflexión de 48 horas.');
+        }
+
+        function guardarYRenderizarMetas() {
             localStorage.setItem('ahorro_metas', JSON.stringify(metas));
             renderMetas();
         }
@@ -162,33 +197,45 @@
                 container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay metas activas.</p>';
                 return;
             }
-
             container.innerHTML = '';
             metas.forEach(meta => {
                 const porcentaje = Math.min(100, (meta.saved / meta.amount) * 100).toFixed(1);
                 container.innerHTML += `
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px;">
                         <strong>🎯 ${meta.name}</strong><br>
-                        Progreso: ${meta.saved}€ / ${meta.amount}€ (${porcentaje}%)<br>
-                        Plazo restante: ${meta.daysLeft} días<br>
-                        Estado de hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
+                        Estrategia: <i>${meta.technique}</i><br>
+                        Progreso: ${meta.saved.toFixed(2)}€ / ${meta.amount}€ (${porcentaje}%)<br>
+                        Plazo límite: ${meta.daysLeft} días<br>
+                        Estado hoy: <span class="status-box status-${meta.status}"></span> ${meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴'}<br>
                         <button onclick="validarDia(${meta.id})" class="btn-green">Validar Día (Check-in)</button>
                     </div>
                 `;
             });
         }
 
+        function renderDeseos() {
+            const container = document.getElementById('deseosList');
+            if(deseos.length === 0) {
+                container.innerHTML = '<span style="color:#64748b; font-size:13px;">No hay impulsos congelados.</span>';
+                return;
+            }
+            container.innerHTML = '';
+            deseos.forEach(d => {
+                container.innerHTML += `<div style="font-size:13px; background:#0f172a; padding:6px; border-radius:6px; margin-top:4px;">⏳ <b>${d.nombre}</b> (${d.precio}€) - Enfríando deseos (48h)</div>`;
+            });
+        }
+
         function validarDia(id) {
             const meta = metas.find(m => m.id === id);
             if(meta) {
-                meta.checkedToday = true;
                 meta.status = 'green';
-                guardarYRenderizar();
+                guardarYRenderizarMetas();
                 alert('¡Día validado en verde!');
             }
         }
 
         renderMetas();
+        renderDeseos();
     </script>
 </body>
 </html>
