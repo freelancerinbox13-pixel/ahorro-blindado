@@ -195,7 +195,7 @@
             <label>¿Qué sistema de ahorro deseas usar?</label>
             <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
                 <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
-                <option value="sueldo">Ahorro por Porcentaje de Sueldo (50/30/20 o 70/20/10)</option>
+                <option value="sueldo">Porcentaje de Ingresos (Mensual o Diario / Autónomo)</option>
                 <option value="variable">Ahorro Variable (Redondeo, Sobrante, Vuelta, Anti-Capricho)</option>
             </select>
 
@@ -234,9 +234,15 @@
                 </div>
             </div>
 
-            <!-- BLOQUE 2: PORCENTAJE DE SUELDO -->
+            <!-- BLOQUE 2: PORCENTAJE DE INGRESOS (MENSUAL O DIARIO) -->
             <div id="seccionSueldo" style="display:none;">
-                <label>Tus ingresos netos mensuales (€):</label>
+                <label>Frecuencia de Ingreso:</label>
+                <select id="frecuenciaIngreso" onchange="cambiarFrecuenciaIngreso()">
+                    <option value="mensual">Ingreso Mensual (Sueldo fijo)</option>
+                    <option value="diario">Ingreso Diario (Autónomo / Ventas diarias)</option>
+                </select>
+
+                <div id="labelIngresoNeto"><label>Tus ingresos netos mensuales (€):</label></div>
                 <input type="number" id="sueldoNeto" placeholder="Ej. 2000">
 
                 <label>Regla de Porcentajes:</label>
@@ -392,7 +398,7 @@
 
         const explicaciones = {
             meta: "💡 <b>Meta de Compra:</b> Define un objetivo de precio fijo. Puedes sellar la bóveda para bloquear retiradas hasta el plazo final.",
-            sueldo: "💡 <b>Porcentaje de Sueldo:</b> Calcula automáticamente cuánto apartar de tus ingresos netos mensuales según reglas financieras.",
+            sueldo: "💡 <b>Porcentaje de Ingresos:</b> Calcula tu distribución de ahorro según tus ingresos (ya sea por sueldo mensual o por ingresos diarios de autónomo).",
             variable: "💡 <b>Ahorro Variable:</b> Acumula la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible."
         };
 
@@ -430,6 +436,20 @@
             } else {
                 document.getElementById('bloqueFechas').style.display = 'none';
                 document.getElementById('bloqueCuota').style.display = 'block';
+            }
+            document.getElementById('vistaPreviaContenedor').style.display = 'none';
+        }
+
+        function cambiarFrecuenciaIngreso() {
+            const freq = document.getElementById('frecuenciaIngreso').value;
+            const labelDiv = document.getElementById('labelIngresoNeto');
+            const inputNeto = document.getElementById('sueldoNeto');
+            if(freq === 'diario') {
+                labelDiv.innerHTML = '<label>Tus ingresos netos promedio por día (€):</label>';
+                inputNeto.placeholder = 'Ej. 80';
+            } else {
+                labelDiv.innerHTML = '<label>Tus ingresos netos mensuales (€):</label>';
+                inputNeto.placeholder = 'Ej. 2000';
             }
             document.getElementById('vistaPreviaContenedor').style.display = 'none';
         }
@@ -496,18 +516,30 @@
                     textoCalculo = `Meta (${name}) - Plazo estimado: <b>${desgloseTiempo}</b> (${daysLeft} días):<br>💰 Pagando ${aporte}€/mes.`;
                 }
             } else if(tipo === 'sueldo') {
-                const sueldo = parseFloat(document.getElementById('sueldoNeto').value);
+                const ingreso = parseFloat(document.getElementById('sueldoNeto').value);
+                const frecuencia = document.getElementById('frecuenciaIngreso').value;
                 technique = document.getElementById('metaTechniqueSueldo').value;
-                if(isNaN(sueldo) || sueldo <= 0) { alert('⚠️ Introduce tus ingresos netos mensuales.'); return; }
+                if(isNaN(ingreso) || ingreso <= 0) { alert('⚠️ Introduce un valor de ingresos válido.'); return; }
 
-                name = `Ahorro por Sueldo (${technique})`;
-                let ahorro = technique === 'Regla 50/30/20' ? sueldo * 0.20 : sueldo * 0.30;
-                amount = ahorro * 12;
-                inicio = new Date().toISOString().split('T')[0];
-                const f = new Date(); f.setFullYear(f.getFullYear() + 1);
-                fin = f.toISOString().split('T')[0];
-                daysLeft = 365;
-                textoCalculo = `Ahorro mensual por sueldo (1 año): <b>${ahorro.toFixed(2)}€/mes</b>.`;
+                if(frecuencia === 'diario') {
+                    let ahorroDia = technique === 'Regla 50/30/20' ? ingreso * 0.20 : ingreso * 0.30;
+                    name = `Ahorro Diario Autónomo (${technique})`;
+                    amount = ahorroDia * 365;
+                    inicio = new Date().toISOString().split('T')[0];
+                    const f = new Date(); f.setFullYear(f.getFullYear() + 1);
+                    fin = f.toISOString().split('T')[0];
+                    daysLeft = 365;
+                    textoCalculo = `Ingreso diario (${ingreso}€) - Ahorro diario sugerido: <b>${ahorroDia.toFixed(2)}€/día</b> (${technique}).`;
+                } else {
+                    name = `Ahorro por Sueldo Mensual (${technique})`;
+                    let ahorroMes = technique === 'Regla 50/30/20' ? ingreso * 0.20 : ingreso * 0.30;
+                    amount = ahorroMes * 12;
+                    inicio = new Date().toISOString().split('T')[0];
+                    const f = new Date(); f.setFullYear(f.getFullYear() + 1);
+                    fin = f.toISOString().split('T')[0];
+                    daysLeft = 365;
+                    textoCalculo = `Sueldo mensual (${ingreso}€) - Ahorro mensual sugerido: <b>${ahorroMes.toFixed(2)}€/mes</b> (${technique}).`;
+                }
             } else {
                 name = document.getElementById('variableName').value.trim();
                 technique = document.getElementById('metaTechniqueVariable').value;
@@ -759,6 +791,7 @@
 
         actualizarExplicacion();
         cambiarModoPlazo();
+        cambiarFrecuenciaIngreso();
         renderMetas();
         renderHistorial();
         renderDeseos();
