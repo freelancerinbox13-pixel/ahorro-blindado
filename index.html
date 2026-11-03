@@ -41,18 +41,20 @@
             border-radius: 12px;
             padding: 6px;
             margin-bottom: 16px;
+            overflow-x: auto;
         }
         .tab-btn {
             background: transparent;
             color: var(--text-color);
             border: none;
-            padding: 8px 12px;
+            padding: 8px 10px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             width: auto;
             margin-top: 0;
+            white-space: nowrap;
         }
         .tab-btn.active {
             background: var(--accent);
@@ -173,7 +175,8 @@
 
     <!-- NAVEGACIÓN POR PESTAÑAS -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('metas')">🎯 Mis Metas</button>
+        <button class="tab-btn active" onclick="switchTab('metas')">🎯 Metas</button>
+        <button class="tab-btn" onclick="switchTab('gastos')">🏠 Gastos</button>
         <button class="tab-btn" onclick="switchTab('crear')">➕ Crear</button>
         <button class="tab-btn" onclick="switchTab('psico')">🧠 Psico</button>
         <button class="tab-btn" onclick="switchTab('ajustes')">⚙️ Ajustes</button>
@@ -187,7 +190,38 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 2: CREAR Y CALCULAR -->
+    <!-- PESTAÑA 2: GASTOS FIJOS Y OBLIGATORIOS (CASA / NEGOCIO) -->
+    <div id="tab-gastos" class="tab-content">
+        <div class="card">
+            <h2>🏠💼 Control de Gastos Fijos (Mes)</h2>
+            <p style="font-size: 13px; opacity: 0.8;">Registra tus obligaciones mensuales (alquiler, luz, cuotas) para prorratear su pago diario.</p>
+
+            <label>Concepto del Gasto:</label>
+            <input type="text" id="gastoName" placeholder="Ej. Alquiler Local / Casa">
+
+            <label>Clasificación:</label>
+            <select id="gastoTipo">
+                <option value="🏠 Casa / Personal">🏠 Casa / Personal</option>
+                <option value="💼 Negocio / Autónomo">💼 Negocio / Autónomo</option>
+                <option value="🏠💼 Mixto (Casa y Negocio)">🏠💼 Mixto (Casa y Negocio)</option>
+            </select>
+
+            <label>Importe Total Mensual (€):</label>
+            <input type="number" id="gastoAmount" placeholder="Ej. 800">
+
+            <label>Días del ciclo de pago (ej. 30 días):</label>
+            <input type="number" id="gastoDias" value="30">
+
+            <button class="btn-warning" onclick="crearGastoFijo()">🔒 Registrar y Blindar Gasto</button>
+        </div>
+
+        <div class="card">
+            <h2>📋 Mis Gastos Obligatorios Activos</h2>
+            <div id="gastosList">No hay gastos fijos registrados.</div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 3: CREAR Y CALCULAR AHORRO -->
     <div id="tab-crear" class="tab-content">
         <div class="card">
             <h2>🧮 Gestión y Creación de Ahorro</h2>
@@ -285,7 +319,7 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 3: PSICOLOGÍA Y HUCHAS -->
+    <!-- PESTAÑA 4: PSICOLOGÍA Y HUCHAS -->
     <div id="tab-psico" class="tab-content">
         <div class="card">
             <h2>☕ Hucha Anti-Caprichos</h2>
@@ -307,7 +341,7 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 4: AJUSTES E HISTORIAL -->
+    <!-- PESTAÑA 5: AJUSTES E HISTORIAL -->
     <div id="tab-ajustes" class="tab-content">
         <div class="card" id="cardCrypto">
             <h2>🔗 Cartera Crypto de Ahorro (Opcional)</h2>
@@ -346,6 +380,7 @@
 
     <script>
         let metas = JSON.parse(localStorage.getItem('ahorro_metas')) || [];
+        let gastosFijos = JSON.parse(localStorage.getItem('ahorro_gastos')) || [];
         let historial = JSON.parse(localStorage.getItem('ahorro_historial')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
         let wallet = localStorage.getItem('ahorro_wallet') || '';
@@ -361,9 +396,10 @@
             
             const buttons = document.querySelectorAll('.tab-btn');
             if(tabId === 'metas') buttons[0].classList.add('active');
-            if(tabId === 'crear') buttons[1].classList.add('active');
-            if(tabId === 'psico') buttons[2].classList.add('active');
-            if(tabId === 'ajustes') buttons[3].classList.add('active');
+            if(tabId === 'gastos') buttons[1].classList.add('active');
+            if(tabId === 'crear') buttons[2].classList.add('active');
+            if(tabId === 'psico') buttons[3].classList.add('active');
+            if(tabId === 'ajustes') buttons[4].classList.add('active');
         }
 
         function irAWallet() {
@@ -454,6 +490,77 @@
             document.getElementById('vistaPreviaContenedor').style.display = 'none';
         }
 
+        function crearGastoFijo() {
+            const name = document.getElementById('gastoName').value.trim();
+            const tipo = document.getElementById('gastoTipo').value;
+            const amount = parseFloat(document.getElementById('gastoAmount').value);
+            const dias = parseInt(document.getElementById('gastoDias').value) || 30;
+
+            if(!name) { alert('⚠️ Introduce un concepto para el gasto.'); return; }
+            if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe mensual válido.'); return; }
+
+            const cuotaDiaria = amount / dias;
+
+            const nuevoGasto = {
+                id: Date.now(),
+                name,
+                tipo,
+                amount,
+                dias,
+                cuotaDiaria,
+                saved: 0,
+                status: 'red'
+            };
+
+            gastosFijos.push(nuevoGasto);
+            guardarYRenderizarGastos();
+            document.getElementById('gastoName').value = '';
+            document.getElementById('gastoAmount').value = '';
+            alert('¡Gasto fijo registrado y blindado con éxito!');
+        }
+
+        function validarGasto(id) {
+            const gasto = gastosFijos.find(g => g.id === id);
+            if(gasto) {
+                gasto.saved += gasto.cuotaDiaria;
+                gasto.status = 'green';
+                guardarYRenderizarGastos();
+                alert(`¡Aportados ${gasto.cuotaDiaria.toFixed(2)}€ para ${gasto.name}!`);
+            }
+        }
+
+        function eliminarGasto(id) {
+            if(confirm('¿Eliminar este gasto fijo del control mensual?')) {
+                gastosFijos = gastosFijos.filter(g => g.id !== id);
+                guardarYRenderizarGastos();
+            }
+        }
+
+        function guardarYRenderizarGastos() {
+            localStorage.setItem('ahorro_gastos', JSON.stringify(gastosFijos));
+            renderGastos();
+        }
+
+        function renderGastos() {
+            const container = document.getElementById('gastosList');
+            if(gastosFijos.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay gastos fijos registrados.</p>'; return; }
+            container.innerHTML = '';
+
+            gastosFijos.forEach(g => {
+                let porcentaje = Math.min(100, (g.saved / g.amount) * 100).toFixed(1);
+                container.innerHTML += `
+                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+                        <strong>${g.tipo} - ${g.name}</strong><br>
+                        Importe Total: <b>${g.amount.toFixed(2)}€</b> / mes<br>
+                        Prorrata Diaria: <span style="color:var(--accent);"><b>${g.cuotaDiaria.toFixed(2)}€ / día</b></span><br>
+                        Progreso Actual: ${g.saved.toFixed(2)}€ / ${g.amount.toFixed(2)}€ (${porcentaje}%)<br>
+                        <button onclick="validarGasto(${g.id})" class="btn-green" style="margin-top:6px;">➕ Aportar Cuota Diaria (${g.cuotaDiaria.toFixed(2)}€)</button>
+                        <button onclick="eliminarGasto(${g.id})" class="btn-red" style="margin-top:4px;">❌ Eliminar Gasto</button>
+                    </div>
+                `;
+            });
+        }
+
         function limpiarFormulario() {
             document.getElementById('metaName').value = '';
             document.getElementById('metaAmount').value = '';
@@ -521,8 +628,7 @@
                 technique = document.getElementById('metaTechniqueSueldo').value;
                 if(isNaN(ingreso) || ingreso <= 0) { alert('⚠️ Introduce un valor de ingresos válido.'); return; }
 
-                // Corregido: Regla 50/30/20 usa 20% de ahorro. Regla 70/20/10 usa 20% de ahorro.
-                let porcentajeAhorro = technique === 'Regla 50/30/20' ? 0.20 : 0.20;
+                let porcentajeAhorro = 0.20;
 
                 if(frecuencia === 'diario') {
                     let ahorroDia = ingreso * porcentajeAhorro;
@@ -796,6 +902,7 @@
         cambiarModoPlazo();
         cambiarFrecuenciaIngreso();
         renderMetas();
+        renderGastos();
         renderHistorial();
         renderDeseos();
     </script>
