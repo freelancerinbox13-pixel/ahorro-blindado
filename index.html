@@ -521,24 +521,27 @@
                 technique = document.getElementById('metaTechniqueSueldo').value;
                 if(isNaN(ingreso) || ingreso <= 0) { alert('⚠️ Introduce un valor de ingresos válido.'); return; }
 
+                // Corregido: Regla 50/30/20 usa 20% de ahorro. Regla 70/20/10 usa 20% de ahorro.
+                let porcentajeAhorro = technique === 'Regla 50/30/20' ? 0.20 : 0.20;
+
                 if(frecuencia === 'diario') {
-                    let ahorroDia = technique === 'Regla 50/30/20' ? ingreso * 0.20 : ingreso * 0.30;
+                    let ahorroDia = ingreso * porcentajeAhorro;
                     name = `Ahorro Diario Autónomo (${technique})`;
                     amount = ahorroDia * 365;
                     inicio = new Date().toISOString().split('T')[0];
                     const f = new Date(); f.setFullYear(f.getFullYear() + 1);
                     fin = f.toISOString().split('T')[0];
                     daysLeft = 365;
-                    textoCalculo = `Ingreso diario (${ingreso}€) - Ahorro diario sugerido: <b>${ahorroDia.toFixed(2)}€/día</b> (${technique}).`;
+                    textoCalculo = `Ingreso diario (${ingreso}€) - Ahorro diario sugerido (20%): <b>${ahorroDia.toFixed(2)}€/día</b> (${technique}).`;
                 } else {
                     name = `Ahorro por Sueldo Mensual (${technique})`;
-                    let ahorroMes = technique === 'Regla 50/30/20' ? ingreso * 0.20 : ingreso * 0.30;
+                    let ahorroMes = ingreso * porcentajeAhorro;
                     amount = ahorroMes * 12;
                     inicio = new Date().toISOString().split('T')[0];
                     const f = new Date(); f.setFullYear(f.getFullYear() + 1);
                     fin = f.toISOString().split('T')[0];
                     daysLeft = 365;
-                    textoCalculo = `Sueldo mensual (${ingreso}€) - Ahorro mensual sugerido: <b>${ahorroMes.toFixed(2)}€/mes</b> (${technique}).`;
+                    textoCalculo = `Sueldo mensual (${ingreso}€) - Ahorro mensual sugerido (20%): <b>${ahorroMes.toFixed(2)}€/mes</b> (${technique}).`;
                 }
             } else {
                 name = document.getElementById('variableName').value.trim();
