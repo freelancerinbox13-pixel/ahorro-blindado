@@ -192,132 +192,139 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 2: GASTOS Y PROVEEDORES INDEPENDIENTES -->
+    <!-- PESTAÑA 2: GASTOS Y PROVEEDORES ACTIVOS -->
     <div id="tab-gastos" class="tab-content">
         <div class="card">
-            <h2>📋 Crear Plan de Gasto / Proveedor</h2>
-            <p style="font-size: 13px; opacity: 0.8;">Crea planes independientes para cada obligación, factura de proveedor o impuesto.</p>
-
-            <label>Concepto o Proveedor:</label>
-            <input type="text" id="gastoName" placeholder="Ej. Proveedor X / Cuota Autónomo / Alquiler">
-
-            <label>Tipo de Gasto:</label>
-            <select id="gastoTipo">
-                <option value="💼 Proveedor / Negocio">💼 Proveedor / Negocio</option>
-                <option value="🏠 Casa / Personal">🏠 Casa / Personal</option>
-                <option value="🏛️ Impuestos / Tasas">🏛️ Impuestos / Tasas</option>
-            </select>
-
-            <label>Importe Total del Plan (€):</label>
-            <input type="number" id="gastoAmount" placeholder="Ej. 380">
-
-            <label>Días del plan (ej. 30 días):</label>
-            <input type="number" id="gastoDias" value="30">
-
-            <label>Canal de Blindaje Físico (Destino del dinero):</label>
-            <select id="gastoDestino">
-                <option value="💳 Tarjeta Prepago (Revolut/N26)">💳 Tarjeta Prepago (Revolut/N26)</option>
-                <option value="🏦 Cuenta Bancaria Secundaria">🏦 Cuenta Bancaria Secundaria</option>
-                <option value="📱 Bizum / Transferencia Externa">📱 Bizum / Transferencia Externa</option>
-            </select>
-
-            <button class="btn-warning" onclick="crearGastoFijo()">🔒 Crear Plan y Blindar Gasto</button>
-        </div>
-
-        <div class="card">
-            <h2>🛡️ Planes de Gastos Activos</h2>
-            <div id="gastosList">No hay planes de gastos registrados.</div>
+            <h2>🛡️ Planes de Gastos y Proveedores Activos</h2>
+            <div id="gastosList">No hay planes de gastos registrados. Ve a la pestaña <b>Crear</b> para añadir uno.</div>
         </div>
     </div>
 
-    <!-- PESTAÑA 3: CREAR Y CALCULAR AHORRO -->
+    <!-- PESTAÑA 3: CREAR Y CALCULAR (AHORRO Y GASTOS) -->
     <div id="tab-crear" class="tab-content">
         <div class="card">
-            <h2>🧮 Gestión y Creación de Ahorro</h2>
+            <h2>🧮 Crear Plan (Ahorro o Gasto)</h2>
             
-            <label>¿Qué sistema de ahorro deseas usar?</label>
-            <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
-                <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
-                <option value="sueldo">Porcentaje de Ingresos (Mensual o Diario / Autónomo)</option>
-                <option value="variable">Ahorro Variable (Redondeo, Sobrante, Vuelta, Anti-Capricho)</option>
+            <label>¿Qué tipo de plan deseas crear?</label>
+            <select id="tipoModulo" onchange="cambiarTipoModulo()">
+                <option value="ahorro">Meta / Sistema de Ahorro</option>
+                <option value="gasto">Gasto Obligatorio / Proveedor / Impuesto</option>
             </select>
 
-            <div id="infoExplicacion" class="info-metodo"></div>
+            <div id="infoExplicacionModulo" class="info-metodo"></div>
 
-            <!-- BLOQUE 1: METAS DE COMPRA -->
-            <div id="seccionMeta">
-                <label>¿Qué quieres comprar?</label>
-                <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche...">
-                
-                <label>Importe objetivo (€ / USDT)</label>
-                <input type="number" id="metaAmount" placeholder="1200">
-
-                <label>Estrategia:</label>
-                <select id="metaTechniqueMeta">
-                    <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
-                    <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado)</option>
+            <!-- SECCIÓN MÓDULO AHORRO -->
+            <div id="moduloAhorro">
+                <label>Sistema de Ahorro:</label>
+                <select id="tipoCalculadora" onchange="cambiarTipoCalculadora()">
+                    <option value="meta">Meta de Compra Fija (Ordenador, Coche, TV...)</option>
+                    <option value="sueldo">Porcentaje de Ingresos (Mensual o Diario / Autónomo)</option>
+                    <option value="variable">Ahorro Variable (Redondeo, Sobrante, Vuelta, Anti-Capricho)</option>
                 </select>
 
-                <label>Modo de Plazo:</label>
-                <select id="modoCalculo" onchange="cambiarModoPlazo()">
-                    <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
-                    <option value="cuota">Sé cuánto puedo pagar al mes (Calcular tiempo)</option>
-                </select>
+                <div id="infoExplicacion" class="info-metodo"></div>
 
-                <div id="bloqueFechas">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
-                        <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
+                <!-- BLOQUE 1: METAS DE COMPRA -->
+                <div id="seccionMeta">
+                    <label>¿Qué quieres comprar?</label>
+                    <input type="text" id="metaName" placeholder="Ej. Ordenador, Coche...">
+                    
+                    <label>Importe objetivo (€ / USDT)</label>
+                    <input type="number" id="metaAmount" placeholder="1200">
+
+                    <label>Estrategia:</label>
+                    <select id="metaTechniqueMeta">
+                        <option value="Corto Plazo (Cuota fija)">Corto Plazo (Cuota fija / Reto)</option>
+                        <option value="Medio/Largo Plazo (Fondo dedicado)">Medio/Largo Plazo (Fondo dedicado)</option>
+                    </select>
+
+                    <label>Modo de Plazo:</label>
+                    <select id="modoCalculo" onchange="cambiarModoPlazo()">
+                        <option value="fechas">Tengo fechas límite (Calcular cuota necesaria)</option>
+                        <option value="cuota">Sé cuánto puedo pagar al mes (Calcular tiempo)</option>
+                    </select>
+
+                    <div id="bloqueFechas">
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex:1;"><label>Fecha Inicio:</label><input type="date" id="fechaInicio"></div>
+                            <div style="flex:1;"><label>Fecha Fin:</label><input type="date" id="fechaFin"></div>
+                        </div>
+                    </div>
+
+                    <div id="bloqueCuota" style="display:none;">
+                        <label>¿Cuánto puedes aportar por mes (€)?</label>
+                        <input type="number" id="aporteMensual" placeholder="Ej. 50">
                     </div>
                 </div>
 
-                <div id="bloqueCuota" style="display:none;">
-                    <label>¿Cuánto puedes aportar por mes (€)?</label>
-                    <input type="number" id="aporteMensual" placeholder="Ej. 50">
+                <!-- BLOQUE 2: PORCENTAJE DE INGRESOS -->
+                <div id="seccionSueldo" style="display:none;">
+                    <label>Frecuencia de Ingreso:</label>
+                    <select id="frecuenciaIngreso" onchange="cambiarFrecuenciaIngreso()">
+                        <option value="mensual">Ingreso Mensual (Sueldo fijo)</option>
+                        <option value="diario">Ingreso Diario (Autónomo / Ventas diarias)</option>
+                    </select>
+
+                    <div id="labelIngresoNeto"><label>Tus ingresos netos mensuales (€):</label></div>
+                    <input type="number" id="sueldoNeto" placeholder="Ej. 2000">
+
+                    <label>Regla de Porcentajes:</label>
+                    <select id="metaTechniqueSueldo">
+                        <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
+                        <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
+                    </select>
                 </div>
+
+                <!-- BLOQUE 3: AHORRO VARIABLE -->
+                <div id="seccionVariable" style="display:none;">
+                    <label>Nombre del fondo variable:</label>
+                    <input type="text" id="variableName" placeholder="Ej. Hucha de Redondeo / Sobrantes">
+
+                    <label>Especificación del Ahorro:</label>
+                    <select id="metaTechniqueVariable">
+                        <option value="Hucha de Redondeo">Hucha de Redondeo (Céntimos de tarjeta)</option>
+                        <option value="Vuelta de la Compra">Vuelta de la Compra (Efectivo sobrante)</option>
+                        <option value="Sobrante Diario">Sobrante Diario (Presupuesto Base Cero)</option>
+                        <option value="Anti-Capricho">Anti-Capricho (Gasto cotidiano evitado)</option>
+                    </select>
+
+                    <label>Monto inicial o aporte a registrar (€):</label>
+                    <input type="number" step="0.01" id="variableMontoInicial" placeholder="Ej. 2.50">
+                </div>
+
+                <label style="margin-top:10px;">Canal de Blindaje Físico (Destino del dinero):</label>
+                <select id="metaDestino">
+                    <option value="💳 Tarjeta Prepago (Revolut/N26)">💳 Tarjeta Prepago (Revolut/N26)</option>
+                    <option value="🏦 Cuenta Bancaria Secundaria">🏦 Cuenta Bancaria Secundaria</option>
+                    <option value="📱 Bizum / Transferencia Externa">📱 Bizum / Transferencia Externa</option>
+                </select>
             </div>
 
-            <!-- BLOQUE 2: PORCENTAJE DE INGRESOS (MENSUAL O DIARIO) -->
-            <div id="seccionSueldo" style="display:none;">
-                <label>Frecuencia de Ingreso:</label>
-                <select id="frecuenciaIngreso" onchange="cambiarFrecuenciaIngreso()">
-                    <option value="mensual">Ingreso Mensual (Sueldo fijo)</option>
-                    <option value="diario">Ingreso Diario (Autónomo / Ventas diarias)</option>
+            <!-- SECCIÓN MÓDULO GASTO -->
+            <div id="moduloGasto" style="display:none;">
+                <label>Concepto o Proveedor:</label>
+                <input type="text" id="gastoName" placeholder="Ej. Proveedor X / Cuota Autónomo / Alquiler">
+
+                <label>Tipo de Gasto:</label>
+                <select id="gastoTipo">
+                    <option value="💼 Proveedor / Negocio">💼 Proveedor / Negocio</option>
+                    <option value="🏠 Casa / Personal">🏠 Casa / Personal</option>
+                    <option value="🏛️ Impuestos / Tasas">🏛️ Impuestos / Tasas</option>
                 </select>
 
-                <div id="labelIngresoNeto"><label>Tus ingresos netos mensuales (€):</label></div>
-                <input type="number" id="sueldoNeto" placeholder="Ej. 2000">
+                <label>Importe Total del Plan (€):</label>
+                <input type="number" id="gastoAmount" placeholder="Ej. 380">
 
-                <label>Regla de Porcentajes:</label>
-                <select id="metaTechniqueSueldo">
-                    <option value="Regla 50/30/20">Regla 50/30/20 (50% Gastos, 30% Ocio, 20% Ahorro)</option>
-                    <option value="Regla 70/20/10">Regla 70/20/10 (70% Gastos, 20% Ahorro, 10% Inversión)</option>
+                <label>Días del plan (puedes ajustar a 25, 30, 35 días...):</label>
+                <input type="number" id="gastoDias" value="30">
+
+                <label>Canal de Blindaje Físico (Destino del dinero):</label>
+                <select id="gastoDestino">
+                    <option value="💳 Tarjeta Prepago (Revolut/N26)">💳 Tarjeta Prepago (Revolut/N26)</option>
+                    <option value="🏦 Cuenta Bancaria Secundaria">🏦 Cuenta Bancaria Secundaria</option>
+                    <option value="📱 Bizum / Transferencia Externa">📱 Bizum / Transferencia Externa</option>
                 </select>
             </div>
-
-            <!-- BLOQUE 3: AHORRO VARIABLE -->
-            <div id="seccionVariable" style="display:none;">
-                <label>Nombre del fondo variable:</label>
-                <input type="text" id="variableName" placeholder="Ej. Hucha de Redondeo / Sobrantes">
-
-                <label>Especificación del Ahorro:</label>
-                <select id="metaTechniqueVariable">
-                    <option value="Hucha de Redondeo">Hucha de Redondeo (Céntimos de tarjeta)</option>
-                    <option value="Vuelta de la Compra">Vuelta de la Compra (Efectivo sobrante)</option>
-                    <option value="Sobrante Diario">Sobrante Diario (Presupuesto Base Cero)</option>
-                    <option value="Anti-Capricho">Anti-Capricho (Gasto cotidiano evitado)</option>
-                </select>
-
-                <label>Monto inicial o aporte a registrar (€):</label>
-                <input type="number" step="0.01" id="variableMontoInicial" placeholder="Ej. 2.50">
-            </div>
-
-            <label style="margin-top:10px;">Canal de Blindaje Físico (Destino del dinero):</label>
-            <select id="metaDestino">
-                <option value="💳 Tarjeta Prepago (Revolut/N26)">💳 Tarjeta Prepago (Revolut/N26)</option>
-                <option value="🏦 Cuenta Bancaria Secundaria">🏦 Cuenta Bancaria Secundaria</option>
-                <option value="📱 Bizum / Transferencia Externa">📱 Bizum / Transferencia Externa</option>
-            </select>
 
             <button class="btn-warning" onclick="calcularPlan()" style="margin-top: 12px;">🔍 Generar Vista Previa del Plan</button>
 
@@ -325,9 +332,13 @@
             <div id="vistaPreviaContenedor" style="display:none; margin-top: 15px;">
                 <div id="resultadoCalculo" class="calc-box"></div>
                 
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;" id="botonesComenzarAhorro">
                     <button class="btn-green" onclick="comenzarMeta(false)">▶️ Comenzar Normal (Flexible)</button>
                     <button class="btn-warning" onclick="comenzarMeta(true)">🔒 Comenzar y Sellar Bóveda (Bloqueo Estricto)</button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; display:none;" id="botonesComenzarGasto">
+                    <button class="btn-warning" onclick="comenzarGasto()">🛡️ Confirmar y Activar Plan de Gasto</button>
                 </div>
             </div>
 
@@ -476,6 +487,21 @@
             variable: "💡 <b>Ahorro Variable:</b> Acumula la vuelta de la compra, sobrantes diarios o anti-caprichos de forma flexible."
         };
 
+        function actualizarExplicacionModulo() {
+            const tipoMod = document.getElementById('tipoModulo').value;
+            const infoMod = document.getElementById('infoExplicacionModulo');
+            if(tipoMod === 'ahorro') {
+                document.getElementById('moduloAhorro').style.display = 'block';
+                document.getElementById('moduloGasto').style.display = 'none';
+                infoMod.innerHTML = "💡 <b>Módulo de Ahorro:</b> Diseña metas de compra, porcentajes de ingresos de autónomo o fondos flexibles.";
+            } else {
+                document.getElementById('moduloAhorro').style.display = 'none';
+                document.getElementById('moduloGasto').style.display = 'block';
+                infoMod.innerHTML = "💡 <b>Módulo de Gastos / Proveedores:</b> Programa obligaciones y divídelas en los días que elijas (25, 30, 35 días...) para sacar el goteo diario.";
+            }
+            document.getElementById('vistaPreviaContenedor').style.display = 'none';
+        }
+
         function actualizarExplicacion() {
             const tipo = document.getElementById('tipoCalculadora').value;
             document.getElementById('infoExplicacion').innerHTML = explicaciones[tipo];
@@ -528,35 +554,159 @@
             document.getElementById('vistaPreviaContenedor').style.display = 'none';
         }
 
-        function crearGastoFijo() {
-            const name = document.getElementById('gastoName').value.trim();
-            const tipo = document.getElementById('gastoTipo').value;
-            const amount = parseFloat(document.getElementById('gastoAmount').value);
-            const dias = parseInt(document.getElementById('gastoDias').value) || 30;
-            const destino = document.getElementById('gastoDestino').value;
+        function limpiarFormulario() {
+            document.getElementById('metaName').value = '';
+            document.getElementById('metaAmount').value = '';
+            document.getElementById('sueldoNeto').value = '';
+            document.getElementById('variableName').value = '';
+            document.getElementById('variableMontoInicial').value = '';
+            document.getElementById('aporteMensual').value = '';
+            document.getElementById('fechaInicio').value = '';
+            document.getElementById('fechaFin').value = '';
+            document.getElementById('gastoName').value = '';
+            document.getElementById('gastoAmount').value = '';
+            document.getElementById('vistaPreviaContenedor').style.display = 'none';
+            calculoTemporal = null;
+            alert('Formulario limpiado.');
+        }
 
-            if(!name) { alert('⚠️ Introduce un concepto o proveedor.'); return; }
-            if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe total válido.'); return; }
+        function calcularPlan() {
+            const tipoMod = document.getElementById('tipoModulo').value;
+            let name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable = false, montoInicial = 0, destino, tipoGasto, cuotaDiaria;
 
-            const cuotaDiaria = amount / dias;
+            document.getElementById('botonesComenzarAhorro').style.display = 'none';
+            document.getElementById('botonesComenzarGasto').style.display = 'none';
+
+            if(tipoMod === 'gasto') {
+                name = document.getElementById('gastoName').value.trim();
+                tipoGasto = document.getElementById('gastoTipo').value;
+                amount = parseFloat(document.getElementById('gastoAmount').value);
+                daysLeft = parseInt(document.getElementById('gastoDias').value) || 30;
+                destino = document.getElementById('gastoDestino').value;
+
+                if(!name) { alert('⚠️ Introduce un concepto o proveedor.'); return; }
+                if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe total válido.'); return; }
+                if(daysLeft <= 0) { alert('⚠️ Introduce un número de días válido.'); return; }
+
+                cuotaDiaria = amount / daysLeft;
+                textoCalculo = `Plan de Gasto (${name}) - <b>${daysLeft} días</b>:<br>💰 Desglose: <b>${cuotaDiaria.toFixed(2)}€ / día</b> para cubrir el total de ${amount.toFixed(2)}€.`;
+
+                calculoTemporal = { name, tipoGasto, amount, dias: daysLeft, cuotaDiaria, destino, esGasto: true };
+                document.getElementById('botonesComenzarGasto').style.display = 'flex';
+            } else {
+                const tipo = document.getElementById('tipoCalculadora').value;
+                if(tipo === 'meta') {
+                    name = document.getElementById('metaName').value.trim();
+                    amount = parseFloat(document.getElementById('metaAmount').value);
+                    technique = document.getElementById('metaTechniqueMeta').value;
+                    const modo = document.getElementById('modoCalculo').value;
+
+                    if(!name) { alert('⚠️ Introduce un nombre para lo que quieres comprar.'); return; }
+                    if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe objetivo válido.'); return; }
+
+                    if(modo === 'fechas') {
+                        inicio = document.getElementById('fechaInicio').value;
+                        fin = document.getElementById('fechaFin').value;
+                        if(!inicio || !fin) { alert('⚠️ Selecciona las fechas de inicio y fin.'); return; }
+                        
+                        const d1 = new Date(inicio), d2 = new Date(fin);
+                        daysLeft = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+                        if(daysLeft <= 0) { alert('⚠️ La fecha fin debe ser posterior a la de inicio.'); return; }
+
+                        textoCalculo = `Meta (${name}) - Plazo (${daysLeft} días):<br>💰 <b>${(amount/daysLeft).toFixed(2)}€/día</b>.`;
+                    } else {
+                        const aporte = parseFloat(document.getElementById('aporteMensual').value);
+                        if(isNaN(aporte) || aporte <= 0) { alert('⚠️ Introduce importe mensual.'); return; }
+                        inicio = new Date().toISOString().split('T')[0];
+                        daysLeft = Math.ceil((amount / aporte) * 30);
+                        const f = new Date(); f.setDate(f.getDate() + daysLeft);
+                        fin = f.toISOString().split('T')[0];
+                        textoCalculo = `Meta (${name}) - Plazo estimado (${daysLeft} días) pagando ${aporte}€/mes.`;
+                    }
+                } else if(tipo === 'sueldo') {
+                    const ingreso = parseFloat(document.getElementById('sueldoNeto').value);
+                    const frecuencia = document.getElementById('frecuenciaIngreso').value;
+                    technique = document.getElementById('metaTechniqueSueldo').value;
+                    if(isNaN(ingreso) || ingreso <= 0) { alert('⚠️ Introduce un valor de ingresos válido.'); return; }
+
+                    let ahorroDia = ingreso * 0.20;
+                    name = `Ahorro Diario Autónomo (${technique})`;
+                    amount = ahorroDia * 365;
+                    inicio = new Date().toISOString().split('T')[0];
+                    const f = new Date(); f.setFullYear(f.getFullYear() + 1);
+                    fin = f.toISOString().split('T')[0];
+                    daysLeft = 365;
+                    textoCalculo = `Ingreso (${ingreso}€) - Ahorro sugerido (20%): <b>${ahorroDia.toFixed(2)}€/día</b>.`;
+                } else {
+                    name = document.getElementById('variableName').value.trim();
+                    technique = document.getElementById('metaTechniqueVariable').value;
+                    montoInicial = parseFloat(document.getElementById('variableMontoInicial').value) || 0;
+                    if(!name) { alert('⚠️ Introduce un nombre para el fondo variable.'); return; }
+
+                    amount = 999999;
+                    inicio = new Date().toISOString().split('T')[0];
+                    fin = 'Indefinido';
+                    daysLeft = 365;
+                    esVariable = true;
+                    textoCalculo = `Fondo variable (${technique}): Acumulación flexible.`;
+                }
+
+                destino = document.getElementById('metaDestino').value;
+                calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable, montoInicial, destino, esGasto: false };
+                document.getElementById('botonesComenzarAhorro').style.display = 'flex';
+            }
+
+            document.getElementById('vistaPreviaContenedor').style.display = 'block';
+            document.getElementById('resultadoCalculo').innerHTML = `📌 <b>Vista Previa del Plan:</b><br>${textoCalculo}<br><span style="font-size:12px;">Destino: ${calculoTemporal.destino}</span>`;
+        }
+
+        function comenzarMeta(sellarBoveda) {
+            if(!calculoTemporal) { alert('⚠️ Genera la vista previa primero.'); return; }
+
+            const nuevaMeta = {
+                id: Date.now(),
+                name: calculoTemporal.name,
+                amount: calculoTemporal.amount,
+                technique: calculoTemporal.technique,
+                inicio: calculoTemporal.inicio,
+                fin: calculoTemporal.fin,
+                textoCalculo: calculoTemporal.textoCalculo,
+                saved: calculoTemporal.montoInicial || 0,
+                daysLeft: calculoTemporal.daysLeft,
+                status: 'red',
+                esVariable: calculoTemporal.esVariable,
+                pausada: false,
+                bloqueada: sellarBoveda,
+                destino: calculoTemporal.destino
+            };
+
+            metas.push(nuevaMeta);
+            guardarYRenderizarMetas();
+            limpiarFormulario();
+            alert(sellarBoveda ? '¡Meta creada y Bóveda Sellada!' : '¡Meta creada en modo flexible!');
+            switchTab('metas');
+        }
+
+        function comenzarGasto() {
+            if(!calculoTemporal || !calculoTemporal.esGasto) { alert('⚠️ Genera la vista previa del gasto primero.'); return; }
 
             const nuevoGasto = {
                 id: Date.now(),
-                name,
-                tipo,
-                amount,
-                dias,
-                cuotaDiaria,
+                name: calculoTemporal.name,
+                tipo: calculoTemporal.tipoGasto,
+                amount: calculoTemporal.amount,
+                dias: calculoTemporal.dias,
+                cuotaDiaria: calculoTemporal.cuotaDiaria,
                 saved: 0,
                 status: 'red',
-                destino
+                destino: calculoTemporal.destino
             };
 
             gastosFijos.push(nuevoGasto);
             guardarYRenderizarGastos();
-            document.getElementById('gastoName').value = '';
-            document.getElementById('gastoAmount').value = '';
-            alert('¡Plan de gasto registrado y canal de blindaje asignado!');
+            limpiarFormulario();
+            alert('¡Plan de gasto activado con éxito!');
+            switchTab('gastos');
         }
 
         function validarGasto(id) {
@@ -565,12 +715,12 @@
                 gasto.saved += gasto.cuotaDiaria;
                 gasto.status = 'green';
                 guardarYRenderizarGastos();
-                alert(`✅ ¡Aportados ${gasto.cuotaDiaria.toFixed(2)}€!\n\n💡 Recuerda transferir o hacer Bizum a tu ${gasto.destino} para sacarlo de tu cuenta operativa.`);
+                alert(`✅ ¡Aportados ${gasto.cuotaDiaria.toFixed(2)}€!\n\n💡 Recuerda transferir o hacer Bizum a tu ${gasto.destino}.`);
             }
         }
 
         function repararGastoRojo(id) {
-            const extra = prompt('Introduce aporte de compensación para este gasto (€):');
+            const extra = prompt('Introduce aporte de compensación (€):');
             const monto = parseFloat(extra);
             if(!isNaN(monto) && monto > 0) {
                 const gasto = gastosFijos.find(g => g.id === id);
@@ -578,7 +728,7 @@
                     gasto.saved += monto;
                     gasto.status = 'green';
                     guardarYRenderizarGastos();
-                    alert(`¡Gasto reparado y puesto en verde 🟢!\nRecuerda mover el dinero a tu ${gasto.destino}.`);
+                    alert(`¡Gasto reparado en verde 🟢!\nRecuerda mover el dinero a tu ${gasto.destino}.`);
                 }
             } else { alert('Importe no válido.'); }
         }
@@ -597,7 +747,7 @@
 
         function renderGastos() {
             const container = document.getElementById('gastosList');
-            if(gastosFijos.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay planes de gastos registrados.</p>'; return; }
+            if(gastosFijos.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay planes de gastos registrados. Ve a la pestaña <b>Crear</b> para añadir uno.</p>'; return; }
             container.innerHTML = '';
 
             gastosFijos.forEach(g => {
@@ -605,12 +755,11 @@
                 let estadoHtml = g.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴';
                 let claseEstado = g.status === 'green' ? 'status-green' : 'status-red';
                 let botonRojo = g.status === 'red' ? `<button onclick="repararGastoRojo(${g.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar</button>` : '';
-                let destinoCanal = g.destino || '💳 Tarjeta Prepago (Revolut/N26)';
 
                 container.innerHTML += `
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>${g.tipo} - ${g.name}</strong><br>
-                        Destino: <span style="color:var(--accent);">${destinoCanal}</span><br>
+                        Destino: <span style="color:var(--accent);">${g.destino || '💳 Tarjeta Prepago (Revolut/N26)'}</span><br>
                         Importe Objetivo: <b>${g.amount.toFixed(2)}€</b> (${g.dias} días)<br>
                         Prorrata Diaria: <b>${g.cuotaDiaria.toFixed(2)}€ / día</b><br>
                         Estado: <span class="status-box ${claseEstado}"></span> ${estadoHtml}<br>
@@ -623,149 +772,10 @@
             });
         }
 
-        function limpiarFormulario() {
-            document.getElementById('metaName').value = '';
-            document.getElementById('metaAmount').value = '';
-            document.getElementById('sueldoNeto').value = '';
-            document.getElementById('variableName').value = '';
-            document.getElementById('variableMontoInicial').value = '';
-            document.getElementById('aporteMensual').value = '';
-            document.getElementById('fechaInicio').value = '';
-            document.getElementById('fechaFin').value = '';
-            document.getElementById('vistaPreviaContenedor').style.display = 'none';
-            calculoTemporal = null;
-            alert('Formulario limpiado.');
-        }
-
-        function calcularPlan() {
-            const tipo = document.getElementById('tipoCalculadora').value;
-            let name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable = false, montoInicial = 0;
-
-            if(tipo === 'meta') {
-                name = document.getElementById('metaName').value.trim();
-                amount = parseFloat(document.getElementById('metaAmount').value);
-                technique = document.getElementById('metaTechniqueMeta').value;
-                const modo = document.getElementById('modoCalculo').value;
-
-                if(!name) { alert('⚠️ Por favor, introduce un nombre para lo que quieres comprar.'); return; }
-                if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe objetivo válido.'); return; }
-
-                if(modo === 'fechas') {
-                    inicio = document.getElementById('fechaInicio').value;
-                    fin = document.getElementById('fechaFin').value;
-                    if(!inicio || !fin) { alert('⚠️ Selecciona tanto la fecha de inicio como la fecha de fin.'); return; }
-                    
-                    const d1 = new Date(inicio), d2 = new Date(fin);
-                    const diffTime = d2 - d1;
-                    daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if(daysLeft <= 0) {
-                        alert('⚠️ La fecha de fin debe ser estrictamente posterior a la fecha de inicio.');
-                        return;
-                    }
-
-                    const mesesExactos = Math.floor(daysLeft / 30);
-                    const diasSobrantes = daysLeft % 30;
-                    let desgloseTiempo = mesesExactos > 0 ? `${mesesExactos} mes(es) y ${diasSobrantes} día(s)` : `${daysLeft} día(s)`;
-
-                    textoCalculo = `Meta (${name}) - Plazo: <b>${desgloseTiempo}</b> (${daysLeft} días total):<br>💰 <b>${(amount/daysLeft).toFixed(2)}€/día</b> o <b>${(amount/(daysLeft/30)).toFixed(2)}€/mes</b>.`;
-                } else {
-                    const aporte = parseFloat(document.getElementById('aporteMensual').value);
-                    if(isNaN(aporte) || aporte <= 0) { alert('⚠️ Introduce cuánto puedes aportar por mes.'); return; }
-                    inicio = new Date().toISOString().split('T')[0];
-                    const meses = amount / aporte;
-                    daysLeft = Math.ceil(meses * 30);
-                    const f = new Date(); f.setDate(f.getDate() + daysLeft);
-                    fin = f.toISOString().split('T')[0];
-                    
-                    const mesesExactos = Math.floor(daysLeft / 30);
-                    const diasSobrantes = daysLeft % 30;
-                    let desgloseTiempo = mesesExactos > 0 ? `${mesesExactos} mes(es) y ${diasSobrantes} día(s)` : `${daysLeft} día(s)`;
-
-                    textoCalculo = `Meta (${name}) - Plazo estimado: <b>${desgloseTiempo}</b> (${daysLeft} días):<br>💰 Pagando ${aporte}€/mes.`;
-                }
-            } else if(tipo === 'sueldo') {
-                const ingreso = parseFloat(document.getElementById('sueldoNeto').value);
-                const frecuencia = document.getElementById('frecuenciaIngreso').value;
-                technique = document.getElementById('metaTechniqueSueldo').value;
-                if(isNaN(ingreso) || ingreso <= 0) { alert('⚠️ Introduce un valor de ingresos válido.'); return; }
-
-                let porcentajeAhorro = 0.20;
-
-                if(frecuencia === 'diario') {
-                    let ahorroDia = ingreso * porcentajeAhorro;
-                    name = `Ahorro Diario Autónomo (${technique})`;
-                    amount = ahorroDia * 365;
-                    inicio = new Date().toISOString().split('T')[0];
-                    const f = new Date(); f.setFullYear(f.getFullYear() + 1);
-                    fin = f.toISOString().split('T')[0];
-                    daysLeft = 365;
-                    textoCalculo = `Ingreso diario (${ingreso}€) - Ahorro diario sugerido (20%): <b>${ahorroDia.toFixed(2)}€/día</b> (${technique}).`;
-                } else {
-                    name = `Ahorro por Sueldo Mensual (${technique})`;
-                    let ahorroMes = ingreso * porcentajeAhorro;
-                    amount = ahorroMes * 12;
-                    inicio = new Date().toISOString().split('T')[0];
-                    const f = new Date(); f.setFullYear(f.getFullYear() + 1);
-                    fin = f.toISOString().split('T')[0];
-                    daysLeft = 365;
-                    textoCalculo = `Sueldo mensual (${ingreso}€) - Ahorro mensual sugerido (20%): <b>${ahorroMes.toFixed(2)}€/mes</b> (${technique}).`;
-                }
-            } else {
-                name = document.getElementById('variableName').value.trim();
-                technique = document.getElementById('metaTechniqueVariable').value;
-                montoInicial = parseFloat(document.getElementById('variableMontoInicial').value) || 0;
-
-                if(!name) { alert('⚠️ Introduce un nombre para el fondo variable.'); return; }
-
-                amount = 999999;
-                inicio = new Date().toISOString().split('T')[0];
-                fin = 'Indefinido';
-                daysLeft = 365;
-                esVariable = true;
-                textoCalculo = `Fondo variable (${technique}): Acumulación flexible indefinida.`;
-            }
-
-            const destino = document.getElementById('metaDestino').value;
-            calculoTemporal = { name, amount, technique, inicio, fin, daysLeft, textoCalculo, esVariable, montoInicial, destino };
-
-            document.getElementById('vistaPreviaContenedor').style.display = 'block';
-            document.getElementById('resultadoCalculo').innerHTML = `📌 <b>Vista Previa del Plan:</b><br>${textoCalculo}<br><span style="font-size:12px;">Destino: ${destino}</span>`;
-        }
-
-        function comenzarMeta(sellarBoveda) {
-            if(!calculoTemporal) { alert('⚠️ Genera la vista previa del plan primero.'); return; }
-
-            const nuevaMeta = {
-                id: Date.now(),
-                name: calculoTemporal.name,
-                amount: calculoTemporal.amount,
-                technique: calculoTemporal.technique,
-                inicio: calculoTemporal.inicio,
-                fin: calculoTemporal.fin,
-                textoCalculo: calculoTemporal.textoCalculo,
-                saved: calculoTemporal.montoInicial || 0,
-                daysLeft: calculoTemporal.daysLeft,
-                status: 'red',
-                esVariable: calculoTemporal.esVariable,
-                pausada: false,
-                diasPausadosTotales: 0,
-                ultimaPausa: null,
-                bloqueada: sellarBoveda,
-                destino: calculoTemporal.destino || '💳 Tarjeta Prepago (Revolut/N26)'
-            };
-
-            metas.push(nuevaMeta);
-            guardarYRenderizarMetas();
-            limpiarFormulario();
-            alert(sellarBoveda ? '¡Meta creada y Bóveda Sellada con éxito!' : '¡Meta creada en modo flexible!');
-            switchTab('metas');
-        }
-
         function intentarRetirada(id) {
             const meta = metas.find(m => m.id === id);
             if(meta && meta.bloqueada) {
-                alert('🔒 ¡BÓVEDA BLOQUEADA! Este ahorro está sellado por tiempo. No puedes retirar fondos hasta que se cumpla la fecha límite.');
+                alert('🔒 ¡BÓVEDA BLOQUEADA! Este ahorro está sellado por tiempo. No puedes retirar fondos hasta la fecha límite.');
             }
         }
 
@@ -808,7 +818,7 @@
                     meta.saved += monto;
                     meta.status = 'green';
                     guardarYRenderizarMetas();
-                    alert(`¡Rojo reparado! Racha en verde 🟢.\nRecuerda mover el dinero a tu ${meta.destino}.`);
+                    alert(`¡Rojo reparado en verde 🟢!\nRecuerda mover el dinero a tu ${meta.destino}.`);
                 }
             } else { alert('Importe no válido.'); }
         }
@@ -874,9 +884,7 @@
                     const fechaFinObj = new Date(meta.fin);
                     const diffTime = fechaFinObj - hoy;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if(diffDays <= 0) {
-                        meta.bloqueada = false;
-                    }
+                    if(diffDays <= 0) { meta.bloqueada = false; }
 
                     if(meta.pausada) {
                         cuentaAtrasTexto = `⏸️ <b>Meta pausada</b>`;
@@ -898,7 +906,6 @@
                     let estadoHtml = meta.pausada ? 'Pausada ⏸️' : (meta.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴');
                     let claseEstado = meta.pausada ? 'status-paused' : (meta.status === 'green' ? 'status-green' : 'status-red');
                     let botonRojo = (!meta.pausada && meta.status === 'red') ? `<button onclick="repararRojo(${meta.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar</button>` : '';
-
                     let botonRetirada = meta.bloqueada ? `<button onclick="intentarRetirada(${meta.id})" class="btn-red" style="margin-top:4px; opacity:0.7;">🔒 Retirar Fondos (Bloqueado)</button>` : ``;
 
                     botonesExtra = `
@@ -965,10 +972,11 @@
             if(meta && !meta.pausada) { 
                 meta.status = 'green'; 
                 guardarYRenderizarMetas(); 
-                alert(`✅ ¡Día validado en verde!\n\n💡 Recuerda mover o transferir el dinero de hoy a tu ${meta.destino}.`); 
+                alert(`✅ ¡Día validado en verde!\n\n💡 Recuerda mover el dinero de hoy a tu ${meta.destino}.`); 
             }
         }
 
+        actualizarExplicacionModulo();
         actualizarExplicacion();
         cambiarModoPlazo();
         cambiarFrecuenciaIngreso();
