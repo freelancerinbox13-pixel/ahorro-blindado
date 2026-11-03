@@ -384,10 +384,10 @@
         let historial = JSON.parse(localStorage.getItem('ahorro_historial')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
         let wallet = localStorage.getItem('ahorro_wallet') || '';
-        let isLight = localStorage.getItem('ahorro_light'] === 'true';
+        let isLight = localStorage.getItem('ahorro_light') === 'true';
         let calculoTemporal = null;
 
-        if(localStorage.getItem('ahorro_light') === 'true') document.body.classList.add('light-mode');
+        if(isLight) document.body.classList.add('light-mode');
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -411,7 +411,7 @@
         }
 
         function toggleTheme() {
-            isLight = !document.body.classList.contains('light-mode');
+            isLight = !isLight;
             localStorage.setItem('ahorro_light', isLight);
             if(isLight) document.body.classList.add('light-mode');
             else document.body.classList.remove('light-mode');
