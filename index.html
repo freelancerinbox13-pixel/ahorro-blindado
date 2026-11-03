@@ -176,7 +176,7 @@
     <!-- NAVEGACIÓN POR PESTAÑAS -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('metas')">🎯 Metas</button>
-        <button class="tab-btn" onclick="switchTab('gastos')">🏠 Gastos</button>
+        <button class="tab-btn" onclick="switchTab('gastos')">🏠 Gastos y Proveedores</button>
         <button class="tab-btn" onclick="switchTab('crear')">➕ Crear</button>
         <button class="tab-btn" onclick="switchTab('psico')">🧠 Psico</button>
         <button class="tab-btn" onclick="switchTab('ajustes')">⚙️ Ajustes</button>
@@ -190,34 +190,34 @@
         </div>
     </div>
 
-    <!-- PESTAÑA 2: GASTOS FIJOS Y OBLIGATORIOS (CASA / NEGOCIO) -->
+    <!-- PESTAÑA 2: GASTOS Y PROVEEDORES INDEPENDIENTES -->
     <div id="tab-gastos" class="tab-content">
         <div class="card">
-            <h2>🏠💼 Control de Gastos Fijos (Mes)</h2>
-            <p style="font-size: 13px; opacity: 0.8;">Registra tus obligaciones mensuales (alquiler, luz, cuotas) para prorratear su pago diario.</p>
+            <h2>📋 Crear Plan de Gasto / Proveedor</h2>
+            <p style="font-size: 13px; opacity: 0.8;">Crea planes independientes para cada obligación, factura de proveedor o impuesto.</p>
 
-            <label>Concepto del Gasto:</label>
-            <input type="text" id="gastoName" placeholder="Ej. Alquiler Local / Casa">
+            <label>Concepto o Proveedor:</label>
+            <input type="text" id="gastoName" placeholder="Ej. Proveedor X / Cuota Autónomo / Alquiler">
 
-            <label>Clasificación:</label>
+            <label>Tipo de Gasto:</label>
             <select id="gastoTipo">
+                <option value="💼 Proveedor / Negocio">💼 Proveedor / Negocio</option>
                 <option value="🏠 Casa / Personal">🏠 Casa / Personal</option>
-                <option value="💼 Negocio / Autónomo">💼 Negocio / Autónomo</option>
-                <option value="🏠💼 Mixto (Casa y Negocio)">🏠💼 Mixto (Casa y Negocio)</option>
+                <option value="🏛️ Impuestos / Tasas">🏛️ Impuestos / Tasas</option>
             </select>
 
-            <label>Importe Total Mensual (€):</label>
-            <input type="number" id="gastoAmount" placeholder="Ej. 800">
+            <label>Importe Total del Plan (€):</label>
+            <input type="number" id="gastoAmount" placeholder="Ej. 380">
 
-            <label>Días del ciclo de pago (ej. 30 días):</label>
+            <label>Días del plan (ej. 30 días):</label>
             <input type="number" id="gastoDias" value="30">
 
-            <button class="btn-warning" onclick="crearGastoFijo()">🔒 Registrar y Blindar Gasto</button>
+            <button class="btn-warning" onclick="crearGastoFijo()">🔒 Crear Plan y Blindar Gasto</button>
         </div>
 
         <div class="card">
-            <h2>📋 Mis Gastos Obligatorios Activos</h2>
-            <div id="gastosList">No hay gastos fijos registrados.</div>
+            <h2>🛡️ Planes de Gastos Activos</h2>
+            <div id="gastosList">No hay planes de gastos registrados.</div>
         </div>
     </div>
 
@@ -384,10 +384,10 @@
         let historial = JSON.parse(localStorage.getItem('ahorro_historial')) || [];
         let deseos = JSON.parse(localStorage.getItem('ahorro_deseos')) || [];
         let wallet = localStorage.getItem('ahorro_wallet') || '';
-        let isLight = localStorage.getItem('ahorro_light') === 'true';
+        let isLight = localStorage.getItem('ahorro_light'] === 'true';
         let calculoTemporal = null;
 
-        if(isLight) document.body.classList.add('light-mode');
+        if(localStorage.getItem('ahorro_light') === 'true') document.body.classList.add('light-mode');
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -411,7 +411,7 @@
         }
 
         function toggleTheme() {
-            isLight = !isLight;
+            isLight = !document.body.classList.contains('light-mode');
             localStorage.setItem('ahorro_light', isLight);
             if(isLight) document.body.classList.add('light-mode');
             else document.body.classList.remove('light-mode');
@@ -496,8 +496,8 @@
             const amount = parseFloat(document.getElementById('gastoAmount').value);
             const dias = parseInt(document.getElementById('gastoDias').value) || 30;
 
-            if(!name) { alert('⚠️ Introduce un concepto para el gasto.'); return; }
-            if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe mensual válido.'); return; }
+            if(!name) { alert('⚠️ Introduce un concepto o proveedor.'); return; }
+            if(isNaN(amount) || amount <= 0) { alert('⚠️ Introduce un importe total válido.'); return; }
 
             const cuotaDiaria = amount / dias;
 
@@ -516,7 +516,7 @@
             guardarYRenderizarGastos();
             document.getElementById('gastoName').value = '';
             document.getElementById('gastoAmount').value = '';
-            alert('¡Gasto fijo registrado y blindado con éxito!');
+            alert('¡Plan de gasto registrado y blindado con éxito!');
         }
 
         function validarGasto(id) {
@@ -529,8 +529,22 @@
             }
         }
 
+        function repararGastoRojo(id) {
+            const extra = prompt('Introduce aporte de compensación para este gasto (€):');
+            const monto = parseFloat(extra);
+            if(!isNaN(monto) && monto > 0) {
+                const gasto = gastosFijos.find(g => g.id === id);
+                if(gasto) {
+                    gasto.saved += monto;
+                    gasto.status = 'green';
+                    guardarYRenderizarGastos();
+                    alert(`¡Gasto reparado! Estado en verde 🟢.`);
+                }
+            } else { alert('Importe no válido.'); }
+        }
+
         function eliminarGasto(id) {
-            if(confirm('¿Eliminar este gasto fijo del control mensual?')) {
+            if(confirm('¿Eliminar este plan de gasto?')) {
                 gastosFijos = gastosFijos.filter(g => g.id !== id);
                 guardarYRenderizarGastos();
             }
@@ -543,19 +557,25 @@
 
         function renderGastos() {
             const container = document.getElementById('gastosList');
-            if(gastosFijos.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay gastos fijos registrados.</p>'; return; }
+            if(gastosFijos.length === 0) { container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay planes de gastos registrados.</p>'; return; }
             container.innerHTML = '';
 
             gastosFijos.forEach(g => {
                 let porcentaje = Math.min(100, (g.saved / g.amount) * 100).toFixed(1);
+                let estadoHtml = g.status === 'green' ? 'Validado 🟢' : 'Pendiente / Rojo 🔴';
+                let claseEstado = g.status === 'green' ? 'status-green' : 'status-red';
+                let botonRojo = g.status === 'red' ? `<button onclick="repararGastoRojo(${g.id})" class="btn-warning" style="margin-top:4px;">🛠️ Reparar / Compensar</button>` : '';
+
                 container.innerHTML += `
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                         <strong>${g.tipo} - ${g.name}</strong><br>
-                        Importe Total: <b>${g.amount.toFixed(2)}€</b> / mes<br>
+                        Importe Objetivo: <b>${g.amount.toFixed(2)}€</b> (${g.dias} días)<br>
                         Prorrata Diaria: <span style="color:var(--accent);"><b>${g.cuotaDiaria.toFixed(2)}€ / día</b></span><br>
+                        Estado: <span class="status-box ${claseEstado}"></span> ${estadoHtml}<br>
                         Progreso Actual: ${g.saved.toFixed(2)}€ / ${g.amount.toFixed(2)}€ (${porcentaje}%)<br>
                         <button onclick="validarGasto(${g.id})" class="btn-green" style="margin-top:6px;">➕ Aportar Cuota Diaria (${g.cuotaDiaria.toFixed(2)}€)</button>
-                        <button onclick="eliminarGasto(${g.id})" class="btn-red" style="margin-top:4px;">❌ Eliminar Gasto</button>
+                        ${botonRojo}
+                        <button onclick="eliminarGasto(${g.id})" class="btn-red" style="margin-top:4px;">❌ Eliminar Plan</button>
                     </div>
                 `;
             });
